@@ -1,0 +1,6 @@
+{
+  "name": "International Steel ERP",
+  "description": "A production-ready Enterprise ERP Workbook and Google Sheets integration for International Steel (الدولية ستيل).",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
