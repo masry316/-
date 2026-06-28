@@ -10,9 +10,16 @@ export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/spreadsheets");
 provider.addScope("https://www.googleapis.com/auth/drive.file");
+provider.addScope("https://www.googleapis.com/auth/calendar");
+provider.addScope("https://www.googleapis.com/auth/calendar.events");
+provider.addScope("https://mail.google.com/");
+provider.addScope("https://www.googleapis.com/auth/gmail.readonly");
+provider.addScope("https://www.googleapis.com/auth/gmail.send");
+provider.addScope("https://www.googleapis.com/auth/gmail.compose");
+provider.addScope("https://www.googleapis.com/auth/gmail.modify");
 
 let isSigningIn = false;
-let cachedAccessToken: string | null = null;
+let cachedAccessToken: string | null = typeof window !== 'undefined' ? sessionStorage.getItem("google_oauth_token") : null;
 
 // Initialize auth state listener
 export const initAuth = (
@@ -23,13 +30,19 @@ export const initAuth = (
     if (user) {
       if (cachedAccessToken) {
         if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
-      } else if (!isSigningIn) {
-        // Token is not cached yet, but user is logged in. We can let the UI know
-        // that they can either retrieve the token on click or prompt a quick re-signin.
-        if (onAuthFailure) onAuthFailure();
+      } else {
+        // Try reading from storage
+        const stored = sessionStorage.getItem("google_oauth_token");
+        if (stored) {
+          cachedAccessToken = stored;
+          if (onAuthSuccess) onAuthSuccess(user, stored);
+        } else if (!isSigningIn) {
+          if (onAuthFailure) onAuthFailure();
+        }
       }
     } else {
       cachedAccessToken = null;
+      sessionStorage.removeItem("google_oauth_token");
       if (onAuthFailure) onAuthFailure();
     }
   });
@@ -45,6 +58,7 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
       throw new Error("Failed to retrieve Google Access Token from Firebase Auth.");
     }
     cachedAccessToken = credential.accessToken;
+    sessionStorage.setItem("google_oauth_token", cachedAccessToken);
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error) {
     console.error("Firebase Google Auth Error:", error);
@@ -55,10 +69,12 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-  return cachedAccessToken;
+  return cachedAccessToken || sessionStorage.getItem("google_oauth_token");
 };
 
 export const logout = async () => {
   await signOut(auth);
   cachedAccessToken = null;
+  sessionStorage.removeItem("google_oauth_token");
 };
+

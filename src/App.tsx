@@ -47,8 +47,11 @@ import {
   Bell,
   Settings,
   Mic,
-  MicOff
+  MicOff,
+  X,
+  Info
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -129,6 +132,25 @@ export default function App() {
   const [dashboardTimeFilter, setDashboardTimeFilter] = useState<"day" | "week" | "month" | "all">("all");
   const [dashboardDate, setDashboardDate] = useState<string>("25-05-2024");
 
+  // Gmail state
+  const [emails, setEmails] = useState<any[]>([]);
+  const [isLoadingEmails, setIsLoadingEmails] = useState<boolean>(false);
+  const [emailTo, setEmailTo] = useState<string>("");
+  const [emailSubject, setEmailSubject] = useState<string>("");
+  const [emailBody, setEmailBody] = useState<string>("");
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
+
+  // Calendar state
+  const [events, setEvents] = useState<any[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState<boolean>(false);
+  const [calSummary, setCalSummary] = useState<string>("");
+  const [calStartDate, setCalStartDate] = useState<string>("");
+  const [calStartTime, setCalStartTime] = useState<string>("");
+  const [calEndDate, setCalEndDate] = useState<string>("");
+  const [calEndTime, setCalEndTime] = useState<string>("");
+  const [calDescription, setCalDescription] = useState<string>("");
+  const [isCreatingEvent, setIsCreatingEvent] = useState<boolean>(false);
+
   // Authentication
   const [user, setUser] = useState<User | null>(null);
   const [needsAuth, setNeedsAuth] = useState<boolean>(true);
@@ -190,6 +212,25 @@ export default function App() {
     });
   };
 
+  // Toast notifications state
+  const [toasts, setToasts] = useState<{
+    id: string;
+    type: "success" | "error" | "info";
+    title: string;
+    message: string;
+    duration?: number;
+  }[]>([]);
+
+  const showToast = (title: string, message: string, type: "success" | "error" | "info" = "success", duration = 5000) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, title, message, type, duration }]);
+    if (duration > 0) {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, duration);
+    }
+  };
+
   // Audit Validation
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
   const [auditReport, setAuditReport] = useState<{
@@ -219,9 +260,13 @@ export default function App() {
     setIsAiLoading(true);
 
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           message: userMsg,
           currentSheetId: selectedSheetId
@@ -258,21 +303,155 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // --- FETCH SHEETS FROM SERVER ON MOUNT ---
+  // --- FETCH SHEETS FROM SERVER ON MOUNT & TOKEN CHANGE ---
   useEffect(() => {
     const fetchAllSheets = async () => {
       try {
-        const response = await fetch("/api/sheets-all");
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        const response = await fetch("/api/sheets-all", { headers });
         if (response.ok) {
           const data = await response.json();
           setSheets(data);
         }
       } catch (err) {
-        console.error("Failed to load worksheets from server memory:", err);
+        console.error("Failed to load worksheets:", err);
       }
     };
     fetchAllSheets();
-  }, []);
+  }, [token]);
+
+  // --- GMAIL & CALENDAR INTEGRATIONS ---
+  const fetchEmails = async () => {
+    if (!token) return;
+    setIsLoadingEmails(true);
+    try {
+      const response = await fetch("/api/gmail/messages", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEmails(data.messages || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch Gmail inbox:", err);
+    } finally {
+      setIsLoadingEmails(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!token) return;
+    if (!emailTo || !emailSubject || !emailBody) {
+      showAlert("حقول مطلوبة", "يرجى ملء جميع حقول البريد الإلكتروني.");
+      return;
+    }
+    setIsSendingEmail(true);
+    try {
+      const response = await fetch("/api/gmail/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          to: emailTo,
+          subject: emailSubject,
+          body: emailBody
+        })
+      });
+      if (response.ok) {
+        showAlert("تم الإرسال بنجاح", "تم إرسال البريد الإلكتروني بنجاح عبر حساب Gmail الخاص بك.");
+        setEmailTo("");
+        setEmailSubject("");
+        setEmailBody("");
+        fetchEmails();
+      } else {
+        const data = await response.json();
+        showAlert("خطأ في الإرسال", data.error || "فشل إرسال البريد الإلكتروني.");
+      }
+    } catch (err: any) {
+      showAlert("خطأ في الاتصال", err.message || "فشل إرسال البريد الإلكتروني.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const fetchEvents = async () => {
+    if (!token) return;
+    setIsLoadingEvents(true);
+    try {
+      const response = await fetch("/api/calendar/events", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data.items || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch Calendar events:", err);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
+
+  const handleCreateEvent = async () => {
+    if (!token) return;
+    if (!calSummary || !calStartDate || !calStartTime || !calEndDate || !calEndTime) {
+      showAlert("حقول مطلوبة", "يرجى ملء جميع حقول الموعد الأساسية.");
+      return;
+    }
+    setIsCreatingEvent(true);
+    try {
+      const startDateTime = `${calStartDate}T${calStartTime}:00`;
+      const endDateTime = `${calEndDate}T${calEndTime}:00`;
+      
+      const event = {
+        summary: calSummary,
+        description: calDescription,
+        start: { dateTime: startDateTime, timeZone: "Africa/Cairo" },
+        end: { dateTime: endDateTime, timeZone: "Africa/Cairo" }
+      };
+
+      const response = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(event)
+      });
+      if (response.ok) {
+        showAlert("تم الإضافة بنجاح", "تمت جدولة الموعد بنجاح وحفظه في Google Calendar.");
+        setCalSummary("");
+        setCalStartDate("");
+        setCalStartTime("");
+        setCalEndDate("");
+        setCalEndTime("");
+        setCalDescription("");
+        fetchEvents();
+      } else {
+        const data = await response.json();
+        showAlert("خطأ في الحفظ", data.error || "فشل حفظ الموعد.");
+      }
+    } catch (err: any) {
+      showAlert("خطأ في الاتصال", err.message || "فشل حفظ الموعد.");
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      if (selectedSheetId === "gmail") {
+        fetchEmails();
+      } else if (selectedSheetId === "calendar") {
+        fetchEvents();
+      }
+    }
+  }, [selectedSheetId, token]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -325,6 +504,12 @@ export default function App() {
   // --- EXPORT TRIGGERS ---
   const triggerExcelDownload = () => {
     downloadExcelWorkbook(sheets, "International_Steel_ERP_Master_Workbook.xlsx");
+    showToast(
+      "تم تصدير ملف Excel بنجاح / Excel Export Complete!",
+      "تم تجميع وتنزيل كتاب العمل الكامل المكون من 51 جدولاً بنجاح بصيغة 'International_Steel_ERP_Master_Workbook.xlsx'.",
+      "success",
+      6000
+    );
   };
 
   const handleGeneratePDFReport = (sheetToPrint = activeSheet, rowsToPrint = filteredRows) => {
@@ -1196,9 +1381,21 @@ export default function App() {
             setExportProgress(prog);
           });
           setExportedId(spreadId);
+          showToast(
+            "تمت المزامنة بنجاح / Sync Complete!",
+            `تم تصدير البيانات ومزامنتها بنجاح مع جدول بيانات Google Sheets تحت عنوان: "${spreadsheetTitle}"`,
+            "success",
+            7000
+          );
         } catch (err: any) {
           console.error(err);
           setExportError(err.message || "An error occurred during Sheets export.");
+          showToast(
+            "فشلت المزامنة / Sync Failed",
+            err.message || "حدث خطأ أثناء محاولة تصدير البيانات إلى Google Sheets.",
+            "error",
+            7000
+          );
         }
       },
       "Export Now",
@@ -1472,12 +1669,18 @@ export default function App() {
   };
 
   const handleSaveRow = async () => {
+    // Determine Authorization header
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     // If the active sheet is users and we are adding a row, call the dedicated User creation API!
     if (selectedSheetId === "users" && isAddingRow) {
       try {
         const response = await fetch("/api/users", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(rowForm)
         });
         const data = await response.json();
@@ -1500,6 +1703,7 @@ export default function App() {
       }
     } else {
       // Normal sheet save or update
+      // Optimistic update
       const updatedSheets = sheets.map((sh) => {
         if (sh.id !== selectedSheetId) return sh;
 
@@ -1517,15 +1721,31 @@ export default function App() {
       // Perform server-side synchronization
       try {
         if (isAddingRow) {
-          await fetch(`/api/sheets/${selectedSheetId}/rows`, {
+          const res = await fetch(`/api/sheets/${selectedSheetId}/rows`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ row: rowForm })
           });
+          const data = await res.json();
+          if (res.ok && data.row) {
+            // Replace the optimistic row with the real one returned from database (with _dbId)
+            setSheets(prevSheets => prevSheets.map(sh => {
+              if (sh.id !== selectedSheetId) return sh;
+              const updated = [...sh.rows];
+              updated[0] = data.row;
+              return { ...sh, rows: updated };
+            }));
+          }
         } else if (editingRowIndex !== null) {
-          await fetch(`/api/sheets/${selectedSheetId}/rows/${editingRowIndex}`, {
+          const rowToUpdate = activeSheet.rows[editingRowIndex];
+          const dbId = rowToUpdate?._dbId;
+          const url = dbId
+            ? `/api/sheets/${selectedSheetId}/rows/${editingRowIndex}?dbId=${dbId}`
+            : `/api/sheets/${selectedSheetId}/rows/${editingRowIndex}`;
+
+          await fetch(url, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ row: rowForm })
           });
         }
@@ -1540,6 +1760,9 @@ export default function App() {
   };
 
   const handleDeleteRow = (index: number) => {
+    const rowToDelete = activeSheet.rows[index];
+    const dbId = rowToDelete?._dbId;
+
     showConfirm(
       "Confirm Delete",
       "Are you sure you want to delete this business record from the database?",
@@ -1553,8 +1776,17 @@ export default function App() {
         setSheets(updatedSheets);
 
         try {
-          await fetch(`/api/sheets/${selectedSheetId}/rows/${index}`, {
-            method: "DELETE"
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+          const url = dbId
+            ? `/api/sheets/${selectedSheetId}/rows/${index}?dbId=${dbId}`
+            : `/api/sheets/${selectedSheetId}/rows/${index}`;
+
+          await fetch(url, {
+            method: "DELETE",
+            headers
           });
         } catch (err) {
           console.error("Failed to sync sheet row deletion with server:", err);
@@ -1887,6 +2119,44 @@ export default function App() {
               </div>
             </button>
 
+            {/* Google Gmail Integration */}
+            <button
+              onClick={() => setSelectedSheetId("gmail")}
+              className={`flex items-center gap-3 text-left px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
+                selectedSheetId === "gmail"
+                  ? "bg-rose-900 border-rose-900 text-white font-semibold shadow-sm"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100/50"
+              }`}
+              id="sidebar-gmail-tab"
+            >
+              <div className={`p-1.5 rounded-md ${selectedSheetId === "gmail" ? "bg-rose-800 text-rose-350" : "bg-rose-50 text-rose-500"}`}>
+                <Bell className="w-4.5 h-4.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold leading-tight">Google Gmail Integration</p>
+                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "gmail" ? "text-rose-200" : "text-slate-400"}`}>البريد الإلكتروني للشركة</p>
+              </div>
+            </button>
+
+            {/* Google Calendar Integration */}
+            <button
+              onClick={() => setSelectedSheetId("calendar")}
+              className={`flex items-center gap-3 text-left px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
+                selectedSheetId === "calendar"
+                  ? "bg-emerald-900 border-emerald-900 text-white font-semibold shadow-sm"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100/50"
+              }`}
+              id="sidebar-calendar-tab"
+            >
+              <div className={`p-1.5 rounded-md ${selectedSheetId === "calendar" ? "bg-emerald-800 text-emerald-400" : "bg-emerald-50 text-emerald-600"}`}>
+                <Calendar className="w-4.5 h-4.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold leading-tight">Google Calendar Integration</p>
+                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "calendar" ? "text-emerald-200" : "text-slate-400"}`}>تقويم المواعيد والاجتماعات</p>
+              </div>
+            </button>
+
             <div className="h-px bg-slate-200 my-1" />
 
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 pt-1" id="sheets-index-header">
@@ -1929,7 +2199,288 @@ export default function App() {
 
         {/* --- RIGHT PANEL: TABLE VIEW & ACTIONS --- */}
         <section className="flex-1 flex flex-col p-6 min-w-0 bg-[#F8FAFC] overflow-y-auto" id="data-panel">
-          {selectedSheetId === "dashboard" ?
+          {selectedSheetId === "gmail" ? (
+            /* --- GMAIL INTEGRATION VIEW --- */
+            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="gmail-integration-view" dir="rtl">
+              <div className="bg-gradient-to-r from-rose-600 to-red-700 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden border border-rose-600">
+                <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2.5">
+                      <Bell className="w-8 h-8 text-rose-200" />
+                      مركز اتصالات البريد الإلكتروني (Gmail)
+                    </h1>
+                    <p className="text-sm text-rose-100 font-sans mt-1">
+                      إرسال الفواتير وعروض الأسعار والتواصل المباشر مع العملاء والموردين عبر Gmail
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {!user ? (
+                <div className="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm flex flex-col items-center gap-4">
+                  <div className="bg-rose-50 p-4 rounded-full text-rose-500">
+                    <Bell className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold">تسجيل الدخول مطلوب</h3>
+                  <p className="text-sm text-slate-500 max-w-md font-sans">
+                    يرجى تسجيل الدخول باستخدام حساب Google المعتمد للشركة لتتمكن من استعراض صندوق البريد وإرسال الرسائل المباشرة.
+                  </p>
+                  <button
+                    onClick={handleLogin}
+                    className="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md cursor-pointer text-xs"
+                  >
+                    ربط حساب Google
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Compose Email Form */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-5 flex flex-col gap-4">
+                    <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5">
+                      إرسال رسالة بريد إلكتروني جديدة
+                    </h3>
+                    <div className="space-y-3.5 text-right">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">البريد الإلكتروني للمستلم (To)</label>
+                        <input
+                          type="email"
+                          placeholder="customer@example.com"
+                          value={emailTo}
+                          onChange={(e) => setEmailTo(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">الموضوع (Subject)</label>
+                        <input
+                          type="text"
+                          placeholder="عاجل: عرض سعر خامات الحديد - الدولية ستيل"
+                          value={emailSubject}
+                          onChange={(e) => setEmailSubject(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">نص الرسالة (Body)</label>
+                        <textarea
+                          rows={6}
+                          placeholder="السلام عليكم ورحمة الله وبركاته..."
+                          value={emailBody}
+                          onChange={(e) => setEmailBody(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-sans"
+                        />
+                      </div>
+                      <button
+                        onClick={handleSendEmail}
+                        disabled={isSendingEmail}
+                        className="w-full bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {isSendingEmail ? "جاري الإرسال..." : "إرسال الآن عبر Gmail"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Inbox List */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-7 flex flex-col gap-4">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                      <h3 className="text-sm font-extrabold text-slate-900">آخر رسائل صندوق الوارد</h3>
+                      <button
+                        onClick={fetchEmails}
+                        disabled={isLoadingEmails}
+                        className="text-xs text-rose-600 hover:text-rose-800 font-bold"
+                      >
+                        {isLoadingEmails ? "جاري التحديث..." : "تحديث الرسائل ↻"}
+                      </button>
+                    </div>
+
+                    {isLoadingEmails ? (
+                      <div className="text-center py-12 text-slate-400 text-xs">
+                        جاري تحميل البريد الوارد...
+                      </div>
+                    ) : emails.length === 0 ? (
+                      <div className="text-center py-12 text-slate-400 text-xs">
+                        لا توجد رسائل مستلمة حالياً في صندوق الوارد.
+                      </div>
+                    ) : (
+                      <div className="space-y-3 overflow-y-auto max-h-[450px]">
+                        {emails.map((msg: any) => {
+                          const headers = msg.payload?.headers || [];
+                          const subject = headers.find((h: any) => h.name.toLowerCase() === "subject")?.value || "(No Subject)";
+                          const from = headers.find((h: any) => h.name.toLowerCase() === "from")?.value || "Unknown";
+                          const snippet = msg.snippet || "";
+                          return (
+                            <div key={msg.id} className="border-b border-slate-100 pb-3 last:border-0 text-right">
+                              <div className="flex justify-between items-start mb-1 text-xs">
+                                <span className="font-bold text-slate-900">{from}</span>
+                                <span className="text-slate-400">{new Date(parseInt(msg.internalDate)).toLocaleDateString("ar-EG")}</span>
+                              </div>
+                              <h4 className="text-xs font-semibold text-rose-850 mb-1">{subject}</h4>
+                              <p className="text-[11px] text-slate-500 line-clamp-2">{snippet}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : selectedSheetId === "calendar" ? (
+            /* --- CALENDAR INTEGRATION VIEW --- */
+            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="calendar-integration-view" dir="rtl">
+              <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden border border-emerald-600">
+                <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2.5">
+                      <Calendar className="w-8 h-8 text-emerald-200" />
+                      تقويم الشركة والمواعيد (Google Calendar)
+                    </h1>
+                    <p className="text-sm text-emerald-100 font-sans mt-1">
+                      تنظيم اجتماعات العملاء، مواعيد استلام الشحنات، وجداول الصيانة والمتابعة الدورية
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {!user ? (
+                <div className="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm flex flex-col items-center gap-4">
+                  <div className="bg-emerald-50 p-4 rounded-full text-emerald-500">
+                    <Calendar className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold">تسجيل الدخول مطلوب</h3>
+                  <p className="text-sm text-slate-500 max-w-md font-sans">
+                    يرجى تسجيل الدخول باستخدام حساب Google المعتمد للشركة لتتمكن من جدولة المواعيد واستعراض التقويم.
+                  </p>
+                  <button
+                    onClick={handleLogin}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md cursor-pointer text-xs"
+                  >
+                    ربط حساب Google
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Schedule Event Form */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-5 flex flex-col gap-4">
+                    <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5">
+                      إضافة موعد / اجتماع جديد للتقويم
+                    </h3>
+                    <div className="space-y-3.5 text-right">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">عنوان الموعد (Summary)</label>
+                        <input
+                          type="text"
+                          placeholder="اجتماع توريد خامات مع شركة المقاولات"
+                          value={calSummary}
+                          onChange={(e) => setCalSummary(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">تاريخ البدء</label>
+                          <input
+                            type="date"
+                            value={calStartDate}
+                            onChange={(e) => setCalStartDate(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">وقت البدء</label>
+                          <input
+                            type="time"
+                            value={calStartTime}
+                            onChange={(e) => setCalStartTime(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">تاريخ الانتهاء</label>
+                          <input
+                            type="date"
+                            value={calEndDate}
+                            onChange={(e) => setCalEndDate(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">وقت الانتهاء</label>
+                          <input
+                            type="time"
+                            value={calEndTime}
+                            onChange={(e) => setCalEndTime(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">الوصف (Description)</label>
+                        <textarea
+                          rows={3}
+                          placeholder="تفاصيل الموعد وجدول الأعمال..."
+                          value={calDescription}
+                          onChange={(e) => setCalDescription(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-sans"
+                        />
+                      </div>
+                      <button
+                        onClick={handleCreateEvent}
+                        disabled={isCreatingEvent}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {isCreatingEvent ? "جاري الحفظ..." : "حفظ في Google Calendar"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Events List */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-7 flex flex-col gap-4">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                      <h3 className="text-sm font-extrabold text-slate-900">المواعيد والاجتماعات القادمة</h3>
+                      <button
+                        onClick={fetchEvents}
+                        disabled={isLoadingEvents}
+                        className="text-xs text-emerald-600 hover:text-emerald-800 font-bold"
+                      >
+                        {isLoadingEvents ? "جاري التحديث..." : "تحديث المواعيد ↻"}
+                      </button>
+                    </div>
+
+                    {isLoadingEvents ? (
+                      <div className="text-center py-12 text-slate-400 text-xs">
+                        جاري تحميل التقويم...
+                      </div>
+                    ) : events.length === 0 ? (
+                      <div className="text-center py-12 text-slate-400 text-xs">
+                        لا توجد مواعيد قادمة مسجلة في التقويم.
+                      </div>
+                    ) : (
+                      <div className="space-y-3 overflow-y-auto max-h-[450px]">
+                        {events.map((event: any) => {
+                          const start = event.start?.dateTime || event.start?.date || "";
+                          const formattedStart = start ? new Date(start).toLocaleString("ar-EG") : "";
+                          return (
+                            <div key={event.id} className="border-b border-slate-100 pb-3 last:border-0 text-right">
+                              <div className="flex justify-between items-start mb-1 text-xs">
+                                <span className="font-bold text-slate-900">{event.summary || "(No Title)"}</span>
+                                <span className="text-emerald-600 font-semibold">{formattedStart}</span>
+                              </div>
+                              {event.description && (
+                                <p className="text-[11px] text-slate-500">{event.description}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : selectedSheetId === "dashboard" ?
             /* --- MASTER EXECUTIVE DASHBOARD / لوحة التحكم والمتابعة التنفيذية الشاملة --- */
             <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="master-dashboard-view" dir="rtl">
               {/* TOP BRAND HEADER & CONTROL BAR */}
@@ -4203,6 +4754,67 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* --- TOAST NOTIFICATIONS CONTAINER --- */}
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 md:left-auto md:-translate-x-0 md:top-6 md:right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full px-4 md:px-0" id="toasts-container">
+        <AnimatePresence>
+          {toasts.map((toast) => {
+            const isSuccess = toast.type === "success";
+            const isError = toast.type === "error";
+            const isInfo = toast.type === "info";
+            return (
+              <motion.div
+                key={toast.id}
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+                layout
+                className="bg-white/95 backdrop-blur-md shadow-2xl border border-slate-200 rounded-xl p-4 flex gap-3 items-start relative overflow-hidden text-right select-none"
+                dir="rtl"
+                id={`toast-${toast.id}`}
+              >
+                {/* Accent strip on the right */}
+                <div
+                  className={`absolute right-0 top-0 bottom-0 w-1.5 ${
+                    isSuccess ? "bg-emerald-600" : isError ? "bg-rose-600" : "bg-blue-600"
+                  }`}
+                  id={`toast-accent-${toast.id}`}
+                />
+
+                {/* Toast icon */}
+                <div className="mr-1.5 shrink-0" id={`toast-icon-container-${toast.id}`}>
+                  {isSuccess ? (
+                    <CheckCircle className="w-5 h-5 text-emerald-600 animate-bounce" />
+                  ) : isError ? (
+                    <AlertTriangle className="w-5 h-5 text-rose-600 animate-pulse" />
+                  ) : (
+                    <Info className="w-5 h-5 text-blue-600" />
+                  )}
+                </div>
+
+                {/* Toast content */}
+                <div className="flex-1 min-w-0" id={`toast-content-${toast.id}`}>
+                  <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                    {toast.title}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-1 font-sans leading-normal">
+                    {toast.message}
+                  </p>
+                </div>
+
+                {/* Dismiss button */}
+                <button
+                  onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                  className="text-slate-400 hover:text-slate-600 p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer mr-1"
+                  id={`toast-dismiss-${toast.id}`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
 
       {/* --- FOOTER / INTEL SIGNATURE --- */}
       <footer className="border-t border-slate-200 bg-white px-6 py-4 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-4 mt-auto" id="footer">
