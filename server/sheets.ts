@@ -82,6 +82,60 @@ router.post("/sheets/:id/rows", async (req, res) => {
   }
 });
 
+// Sync invoice lines for a specific InvoiceNo (e.g. SalesInvoiceLines or PurchaseInvoiceLines)
+router.post("/sheets/:id/sync-invoice-lines", async (req, res) => {
+  const userId = await getUserId(req);
+  const sheetId = req.params.id; // e.g. "salesInvoiceLines" or "purchaseInvoiceLines"
+  const { invoiceNo, lines } = req.body;
+  
+  if (!invoiceNo) {
+    return res.status(400).json({ error: "invoiceNo is required" });
+  }
+
+  if (userId) {
+    try {
+      // 1. Delete existing rows for this invoiceNo in this sheetId
+      const existingRows = await db.select().from(erpRows).where(
+        and(eq(erpRows.userId, userId), eq(erpRows.sheetId, sheetId))
+      );
+      
+      for (const r of existingRows) {
+        const rowData = r.rowData as any;
+        if (rowData && String(rowData.InvoiceNo) === String(invoiceNo)) {
+          await db.delete(erpRows).where(eq(erpRows.id, r.id));
+        }
+      }
+
+      // 2. Insert new lines
+      const insertedLines = [];
+      for (const line of lines) {
+        const result = await db.insert(erpRows).values({
+          userId,
+          sheetId,
+          rowData: line
+        }).returning();
+        insertedLines.push({ ...line, _dbId: result[0].id });
+      }
+
+      res.json({ success: true, lines: insertedLines });
+    } catch (error) {
+      console.error("Failed to sync invoice lines in db:", error);
+      res.status(500).json({ error: "Failed to sync invoice lines in database" });
+    }
+  } else {
+    // In-memory store
+    const sheet = sheetsStore.find(sh => sh.id === sheetId);
+    if (!sheet) {
+      return res.status(404).json({ error: "Sheet not found" });
+    }
+    // Remove old lines for this invoiceNo
+    sheet.rows = sheet.rows.filter((r: any) => String(r.InvoiceNo) !== String(invoiceNo));
+    // Add new lines
+    sheet.rows.unshift(...lines);
+    res.json({ success: true, sheet });
+  }
+});
+
 // Delete a row from a specific sheet
 router.delete("/sheets/:id/rows/:index", async (req, res) => {
   const userId = await getUserId(req);

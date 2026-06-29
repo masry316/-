@@ -52,7 +52,8 @@ import {
   Info,
   Scale,
   Check,
-  ClipboardList
+  ClipboardList,
+  Camera
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -310,6 +311,408 @@ export default function App() {
   // --- STATE ---
   const [sheets, setSheets] = useState<SheetConfig[]>(ALL_ERP_SHEETS);
   const [selectedSheetId, setSelectedSheetId] = useState<string>("dashboard");
+  
+  // --- BILINGUAL (ARABIC / ENGLISH) STATE & DICTIONARIES ---
+  const [language, setLanguage] = useState<"ar" | "en">(() => {
+    const saved = localStorage.getItem("erp_lang");
+    return (saved === "en" || saved === "ar") ? saved : "ar";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("erp_lang", language);
+  }, [language]);
+
+  const uiTranslations = {
+    ar: {
+      brandTitle: "الدولية ستيل",
+      brandSubtitle: "تجارة وتوريد خامات الأستانلس ستيل الفاخرة | ألواح، لفائف، ومواسير",
+      quickNavTitle: "شريط التنقل السريع والمباشر للنظام:",
+      dashboard: "📊 لوحة التحكم والبيانات",
+      salesInvoices: "🧾 فواتير المبيعات",
+      purchaseInvoices: "🛒 فواتير المشتريات",
+      items: "📦 مستودع الأصناف والمخزون",
+      customers: "👥 قاعدة العملاء",
+      suppliers: "🤝 سجل الموردين",
+      auditLog: "📜 سجل الرقابة والعمليات",
+      cuttingSimulator: "🪵 محاكي قص الحديد (Cutter)",
+      auditLedger: "تدقيق دفتر الحسابات العامة 🛡️",
+      totalWorksheets: "إجمالي جداول البيانات",
+      sheetsCount: "51 جدولاً تشغيلياً",
+      salesYTD: "مبيعات السنة الحالية YTD",
+      steelGrades: "رتب الأستانلس المعتمدة",
+      supportedGrades: "304 / 316 / 430 فاخر",
+      warehouseCapacity: "الاستيعاب التخزيني الفعلي",
+      warehouseUnits: "5 مواقع ومستودعات رئيسية",
+      systemIntegrity: "سلامة ومطابقة الحسابات",
+      integrityStatus: "متزن ومطابق 100%",
+      searchPlaceholder: "البحث في أسماء الجداول الفرعية...",
+      tableSearchPlaceholder: "البحث بالكلمة المفتاحية في السجلات الحالية...",
+      logoutTooltip: "قطع الاتصال بحساب Google",
+      signInWithGoogle: "تسجيل الدخول باستخدام Google",
+      allCategories: "جميع الأقسام التشغيلية",
+      categoryLabel: "القسم التشغيلي",
+      showingPage: "عرض الصفحة",
+      of: "من أصل",
+      records: "سجلات",
+      noRecordsFound: "لم يتم العثور على أي سجلات مطابقة للبحث الحالي.",
+      addNewRow: "إضافة سجل جديد",
+      saveRow: "حفظ السجل",
+      cancel: "إلغاء",
+      edit: "تعديل",
+      delete: "حذف",
+      view: "تفاصيل",
+      printInvoice: "طباعة الفاتورة",
+      vatEnabled: "تفعيل ضريبة القيمة المضافة 14%",
+      vatEnabledDesc: "شامل الضريبة الضريبية",
+      isBalanced: "متزن حسابياً",
+      unbalanced: "غير متزن",
+      actions: "الإجراءات والعمليات",
+      rowFormTitleAdd: "إضافة سجل مالي/تشغيلي جديد",
+      rowFormTitleEdit: "تحديث وتعديل السجل التشغيلي",
+      saveChanges: "حفظ التغييرات وتحديث النظام",
+      close: "إغلاق نافذة العرض",
+      yes: "نعم",
+      no: "لا",
+      searchSheets: "ابحث في 51 جدولاً...",
+      googleGmail: "مزامنة بريد Google Gmail",
+      googleCalendar: "مزامنة تقويم Google Calendar",
+      activeSecure: "● نظام مالي نشط وآمن",
+      activeSecureEn: "ACTIVE SECURE CORE",
+      baseCurrency: "العملة الأساسية: الجنيه المصري (EGP)",
+      companyLongName: "الدولية ستيل لتجارة وتوريد خامات الاستانلس ستيل",
+      erpSystemSub: "نظام التشغيل المؤسسي المتكامل ولوحة القيادة التنفيذية الذكية",
+      printReport: "طباعة التقرير الشامل",
+      downloadWorkbook: "تصدير كتاب العمل الكامل Excel",
+      filterByDate: "تصفية بمدى التاريخ والوقت",
+      selectedDate: "تاريخ الفلترة النشط:",
+      timeFilterAll: "الكل",
+      timeFilterDay: "اليوم",
+      timeFilterWeek: "أسبوع",
+      timeFilterMonth: "شهر",
+      overviewHeading: "أرقام وإحصائيات المبيعات والأداء",
+      outstandingReceivables: "مستحقات بذمة العملاء (آجل)",
+      completedPurchases: "إجمالي المشتريات المستلمة",
+      unpaidInvoices: "فواتير غير مسددة",
+      salesTrend: "منحنى المبيعات والتدفق المالي (ج.م)",
+      distributionByGrade: "توزيع المخزون حسب رتبة الصلب (طن)",
+      customerDistribution: "توزيع المبيعات حسب فئة العملاء",
+      erdHeading: "مخطط العلاقات بين الكيانات وجداول البيانات (ERD)",
+      erdSub: "توضيح مفاتيح الربط (Foreign Keys) وقواعد العلاقات المتكاملة في النظام",
+      cuttingSimulatorTitle: "محاكي قص وتقطيع الألواح والمواسير (Steel Cutter Builder)",
+      cuttingSub: "تحسين وقص الصاج لتقليل الهوالك وحساب كفاءة استخدام المواد الخام",
+      rawMaterial: "المادة الخام والأبعاد المتوفرة (مم)",
+      rawLength: "طول لوح الخام (مم)",
+      rawWidth: "عرض لوح الخام (مم)",
+      requiredCut: "الأبعاد المطلوبة للقطع المستهدفة (مم)",
+      reqLength: "طول القطعة المطلوبة (مم)",
+      reqWidth: "عرض القطعة المطلوبة (مم)",
+      reqQty: "الكمية المطلوبة (قطع)",
+      optimizeButton: "حساب كفاءة القص الأمثل وتوليد المخطط",
+      optimizedResults: "نتائج القص المحسن والتحليلات الفنية:",
+      usableCuts: "عدد القطع المستخرجة بنجاح:",
+      yieldEfficiency: "كفاءة استغلال السطح:",
+      wastePercent: "نسبة الهدر والقصاصات المتبقية:",
+      simulatedLayout: "المخطط المرئي لتوزيع قطع القص على اللوح الخام:",
+      pricingEngineTitle: "محرر تسعير المنتجات الذكي (Interactive Pricing Engine)",
+      pricingSub: "حساب تكلفة طن الاستانلس بناءً على رتبة الصلب، تكاليف التصنيع وهوامش الربح",
+      steelGrade: "رتبة صلب الاستانلس (Grade)",
+      rawCost: "تكلفة شراء الطن خام (ج.م)",
+      processingCost: "تكاليف تشغيل وتجهيز الطن (ج.م)",
+      profitMargin: "هامش الربح المطلوب (%)",
+      calculatedPrices: "الأسعار المقترحة للبيع:",
+      costPrice: "تكلفة الإنتاج الإجمالية للطن:",
+      suggestedPrice: "سعر البيع المقترح شامل هامش الربح:",
+      vat14Price: "سعر البيع النهائي للعميل شامل ضريبة 14%:",
+      voiceCommandBanner: "🎙️ وضع الإملاء الصوتي السريع: استخدم أزرار الميكروفون المجاورة لكل حقل لإدخال البيانات بالصوت باللغة المحددة.",
+      listeningText: "جاري الاستماع للحديث... تحدث الآن.",
+      partnerBalanceLabel: "الرصيد المتبقي في ذمة الشريك:",
+      invoiceLinesHeading: "بنود الفاتورة ومواصفات الأصناف المسجلة",
+      addItemLine: "+ إضافة بند جديد للفاتورة",
+      confirmDeleteRow: "هل أنت متأكد من حذف هذا السجل نهائياً من النظام وجداول البيانات؟",
+      deletedSuccess: "تم الحذف بنجاح",
+      confirmDeleteText: "تنبيه: سيتم إزالة هذا السجل بشكل دائم وقد يؤثر على العمليات المالية المرتبطة به.",
+      deleteConfirmBtn: "نعم، احذف السجل نهائياً",
+      exploreRelationsTitle: "مستكشف العلاقات والروابط الحية (Interactive Relations Explorer)",
+      exploreRelationsSub: "تتبع الحركات المترابطة والقيود والبنود التابعة للسجل المحدد تلقائياً",
+      noChildLines: "لا توجد أي سطور أو حركات فرعية مسجلة لهذا المستند المالي في جداول التفاصيل.",
+      taxInvoicePrintout: "الفاتورة الضريبية الرسمية المعتمدة | TAX INVOICE PRINTOUT",
+      sellerInfo: "بيانات جهة الإصدار (البائع):",
+      buyerInfo: "بيانات العميل المستلم (المشتري):",
+      invoiceDetails: "تفاصيل المستند والمطابقة:",
+      invoiceNoLabel: "رقم الفاتورة:",
+      invoiceDateLabel: "تاريخ الإصدار:",
+      orderNoLabel: "أمر التوريد المرجعي:",
+      itemCodeCol: "كود الصنف",
+      itemNameCol: "اسم الصنف والمنتج",
+      qtyCol: "الكمية",
+      unitPriceCol: "سعر الوحدة",
+      subtotalCol: "الإجمالي",
+      netTotalLabel: "الإجمالي الصافي الخاضع للضريبة:",
+      vatAmountLabel: "ضريبة القيمة المضافة المعتمدة (14%):",
+      grandTotalLabel: "إجمالي الفاتورة النهائي المستحق:",
+      paidAmountLabel: "المبلغ الذي تم سداده بالفعل:",
+      remainingAmountLabel: "المتبقي المستحق السداد:",
+      officialStampText: "مستند معتمد إلكترونياً من مصلحة الضرائب المصرية - الخزانة العامة لشركة الدولية ستيل",
+      printDocBtn: "طباعة المستند الورقي",
+      gmailHeading: "بوابة بريد الشركة ومزامنة الرسائل والمراسلات 📧",
+      gmailSub: "مراسلة العملاء وإرسال الإشعارات التنبيهية والتحقق من صندوق الوارد التابع للشركة",
+      sendEmailTitle: "إرسال رسالة بريد إلكتروني جديدة لعميل/مورد:",
+      recipientEmail: "البريد الإلكتروني للمستلم:",
+      emailSubjectLabel: "موضوع الرسالة:",
+      emailBodyLabel: "محتوى الرسالة التفصيلي:",
+      sendEmailBtn: "إرسال الرسالة الآن ✉️",
+      sendingEmailText: "جاري المراسلة والإرسال الحسابي...",
+      refreshInbox: "تحديث صندوق الرسائل الواردة ↻",
+      calendarHeading: "مستكشف التقويم والمواعيد والاجتماعات 📅",
+      calendarSub: "تخطيط مواعيد استلام الشحنات والزيارات والاجتماعات المالية للشركة",
+      createEventTitle: "جدولة حدث/اجتماع جديد في التقويم:",
+      eventSummary: "عنوان الاجتماع/الحدث:",
+      eventDescription: "تفاصيل ووصف الحدث:",
+      eventStart: "توقيت وتاريخ البدء:",
+      eventEnd: "توقيت وتاريخ الانتهاء:",
+      createEventBtn: "حفظ وجدولة الموعد 📅",
+      creatingEventText: "جاري الحفظ والجدولة...",
+      upcomingEvents: "المواعيد والاجتماعات القادمة المسجلة",
+      refreshEvents: "تحديث المواعيد ↻"
+    },
+    en: {
+      brandTitle: "International Steel",
+      brandSubtitle: "Trading & Supply of Premium Stainless Steel Sheets, Coils & Pipes",
+      quickNavTitle: "Quick System Navigation Hub:",
+      dashboard: "📊 Master Dashboard",
+      salesInvoices: "🧾 Sales Invoices",
+      purchaseInvoices: "🛒 Purchase Invoices",
+      items: "📦 Stock & Inventory",
+      customers: "👥 Customers Registry",
+      suppliers: "🤝 Suppliers Log",
+      auditLog: "📜 Audit Logs & Operations",
+      cuttingSimulator: "🪵 Steel Cutter Simulator",
+      auditLedger: "Audit General Ledger 🛡️",
+      totalWorksheets: "Total Worksheets",
+      sheetsCount: "51 Operational Worksheets",
+      salesYTD: "Sales YTD",
+      steelGrades: "Steel Grades",
+      supportedGrades: "304 / 316 / 430 Premium",
+      warehouseCapacity: "Actual Storage Capacity",
+      warehouseUnits: "5 Main Warehouse Sites",
+      systemIntegrity: "Accounting Balance Integrity",
+      integrityStatus: "100% Balanced & Verified",
+      searchPlaceholder: "Search tables...",
+      tableSearchPlaceholder: "Search records by keyword...",
+      logoutTooltip: "Disconnect Google Account",
+      signInWithGoogle: "Sign in with Google",
+      allCategories: "All Operational Categories",
+      categoryLabel: "Operational Category",
+      showingPage: "Page",
+      of: "of",
+      records: "records",
+      noRecordsFound: "No matching records found.",
+      addNewRow: "Add Record",
+      saveRow: "Save Record",
+      cancel: "Cancel",
+      edit: "Edit",
+      delete: "Delete",
+      view: "View",
+      printInvoice: "Print Invoice",
+      vatEnabled: "Enable VAT 14%",
+      vatEnabledDesc: "Tax Inclusive",
+      isBalanced: "Balanced",
+      unbalanced: "Unbalanced",
+      actions: "Actions",
+      rowFormTitleAdd: "Add New Record",
+      rowFormTitleEdit: "Edit Record Details",
+      saveChanges: "Save Changes",
+      close: "Close View",
+      yes: "Yes",
+      no: "No",
+      searchSheets: "Search 51 sheets...",
+      googleGmail: "Google Gmail Integration",
+      googleCalendar: "Google Calendar Integration",
+      activeSecure: "● ACTIVE SECURE CORE SYSTEM",
+      activeSecureEn: "ACTIVE SECURE CORE",
+      baseCurrency: "Base Currency: Egyptian Pound (EGP)",
+      companyLongName: "International Steel for Trading & Supply Co.",
+      erpSystemSub: "Corporate Enterprise Resource Planning & BI Hub",
+      printReport: "Print Executive Report",
+      downloadWorkbook: "Export Workbook to Excel",
+      filterByDate: "Filter by Date & Time",
+      selectedDate: "Active filter date:",
+      timeFilterAll: "All Time",
+      timeFilterDay: "Today",
+      timeFilterWeek: "This Week",
+      timeFilterMonth: "This Month",
+      overviewHeading: "Sales Performance & Operational Analytics",
+      outstandingReceivables: "Outstanding Client Receivables",
+      completedPurchases: "Total Completed Purchases",
+      unpaidInvoices: "Unpaid Invoices Count",
+      salesTrend: "Sales Trend & Cash Flow (EGP)",
+      distributionByGrade: "Stock Distribution by Steel Grade (Tons)",
+      customerDistribution: "Sales Volume by Customer Category",
+      erdHeading: "Entity Relationship Diagram (ERD)",
+      erdSub: "Visualizing Foreign Key constraints and schema integration rules across the system",
+      cuttingSimulatorTitle: "Steel Plate & Coil Cutting Simulator (Cutter Builder)",
+      cuttingSub: "Optimizing cuts to minimize scrap waste and compute raw material yield efficiency",
+      rawMaterial: "Raw Material Dimensions (mm)",
+      rawLength: "Raw Sheet Length (mm)",
+      rawWidth: "Raw Sheet Width (mm)",
+      requiredCut: "Required Target Dimensions (mm)",
+      reqLength: "Target Cut Length (mm)",
+      reqWidth: "Target Cut Width (mm)",
+      reqQty: "Required Quantity (pcs)",
+      optimizeButton: "Calculate Cutting Efficiency & Generate Layout",
+      optimizedResults: "Optimized Layout Results & Technical Analysis:",
+      usableCuts: "Successful Extracted Pieces:",
+      yieldEfficiency: "Surface Yield Efficiency:",
+      wastePercent: "Resulting Scrap Scrap Waste:",
+      simulatedLayout: "Visual Placement Blueprint on Raw Steel Plate:",
+      pricingEngineTitle: "Interactive Pricing Engine Builder",
+      pricingSub: "Calculate stainless steel ton rate based on steel grades, manufacturing and markup",
+      steelGrade: "Stainless Steel Grade",
+      rawCost: "Raw material cost per ton (EGP)",
+      processingCost: "Processing and treatment cost per ton (EGP)",
+      profitMargin: "Target Profit Margin (%)",
+      calculatedPrices: "Suggested Unit Price Calculations:",
+      costPrice: "Total cost of production per ton:",
+      suggestedPrice: "Suggested selling price with margin:",
+      vat14Price: "Final client retail price with 14% VAT:",
+      voiceCommandBanner: "🎙️ Quick Voice Dictation Mode: Use the microphone buttons next to input fields to populate them via speech in the selected language.",
+      listeningText: "Listening... Speak now.",
+      partnerBalanceLabel: "Remaining Partner Account Balance:",
+      invoiceLinesHeading: "Invoice Detail Items & Product Lines",
+      addItemLine: "+ Add Product Item Line",
+      confirmDeleteRow: "Are you sure you want to permanently delete this record?",
+      deletedSuccess: "Deleted successfully",
+      confirmDeleteText: "Warning: Removing this record is permanent and might affect linked transactions.",
+      deleteConfirmBtn: "Yes, delete record permanently",
+      exploreRelationsTitle: "Interactive Relations & FK Linkage Explorer",
+      exploreRelationsSub: "Track related child entries, ledger details, and audit records seamlessly",
+      noChildLines: "No child lines or sub-transactions are found in database details for this document.",
+      taxInvoicePrintout: "Official Authorized Tax Invoice | FATURA PRINTOUT",
+      sellerInfo: "Issuer Details (Seller):",
+      buyerInfo: "Client Details (Buyer):",
+      invoiceDetails: "Document Metadata & Matching:",
+      invoiceNoLabel: "Invoice Number:",
+      invoiceDateLabel: "Issue Date:",
+      orderNoLabel: "Reference Purchase/Sales Order:",
+      itemCodeCol: "Item Code",
+      itemNameCol: "Item Description",
+      qtyCol: "Qty",
+      unitPriceCol: "Unit Price",
+      subtotalCol: "Total Amount",
+      netTotalLabel: "Net Amount Subject to Tax:",
+      vatAmountLabel: "Value Added Tax (14% VAT):",
+      grandTotalLabel: "Total Grand Invoice Amount:",
+      paidAmountLabel: "Amount Received/Paid:",
+      remainingAmountLabel: "Remaining Amount Due:",
+      officialStampText: "Electronically authorized by the Egyptian Tax Authority - International Steel General Treasury",
+      printDocBtn: "Print Paper Document",
+      gmailHeading: "Corporate Email Communications Hub 📧",
+      gmailSub: "Email clients, send notification reminders and inspect the corporate general inbox",
+      sendEmailTitle: "Send New Email to Client/Supplier:",
+      recipientEmail: "Recipient Email Address:",
+      emailSubjectLabel: "Email Subject:",
+      emailBodyLabel: "Detailed Message Body:",
+      sendEmailBtn: "Send Email Message Now ✉️",
+      sendingEmailText: "Sending email mathematically...",
+      refreshInbox: "Refresh Email Inbox ↻",
+      calendarHeading: "Calendar Schedules & Meetings Hub 📅",
+      calendarSub: "Track shipment deliveries, general audits and corporate financial sessions",
+      createEventTitle: "Schedule New Event in Calendar:",
+      eventSummary: "Event Title/Summary:",
+      eventDescription: "Detailed Description:",
+      eventStart: "Start Date & Time:",
+      eventEnd: "End Date & Time:",
+      createEventBtn: "Save & Schedule Event 📅",
+      creatingEventText: "Saving and scheduling...",
+      upcomingEvents: "Upcoming Scheduled Meetings & Events",
+      refreshEvents: "Refresh Event Schedule ↻"
+    }
+  };
+
+  const getColumnLabel = (key: string, defaultLabel: string, lang: "ar" | "en") => {
+    if (lang === "en") {
+      const mixed = COLUMN_TRANSLATIONS[key];
+      if (mixed && mixed.includes("(")) {
+        const match = mixed.match(/\(([^)]+)\)/);
+        if (match) return match[1];
+      }
+      return defaultLabel;
+    } else {
+      const mixed = COLUMN_TRANSLATIONS[key];
+      if (mixed && mixed.includes("(")) {
+        return mixed.split("(")[0].trim();
+      }
+      return mixed || defaultLabel;
+    }
+  };
+
+  const getCategoryLabel = (cat: string, lang: "ar" | "en") => {
+    if (lang === "ar") {
+      switch (cat) {
+        case "All": return "جميع الأقسام التشغيلية";
+        case "System & Org": return "النظام والمؤسسة";
+        case "Contacts & Accounts": return "جهات الاتصال والحسابات";
+        case "Inventory & Items": return "المخزون والأصناف";
+        case "Sales Department": return "إدارة المبيعات";
+        case "Purchasing Department": return "إدارة المشتريات";
+        case "Finance & Treasury": return "المالية والخزينة";
+        case "System Logs": return "سجلات النظام والرقابة";
+        default: return cat;
+      }
+    }
+    return cat;
+  };
+
+  const getCellValueLabel = (val: any, colType: string, lang: "ar" | "en") => {
+    if (val === undefined || val === null) return "-";
+    if (colType === "boolean") {
+      if (lang === "ar") return val ? "نعم" : "لا";
+      return val ? "True" : "False";
+    }
+    if (colType === "currency") {
+      const num = typeof val === "number" ? val : parseFloat(val);
+      if (isNaN(num)) return String(val);
+      if (lang === "ar") return `${num.toLocaleString("en-US")} ج.م`;
+      return `EGP ${num.toLocaleString("en-US")}`;
+    }
+    
+    const valStr = String(val);
+    if (lang === "ar") {
+      switch (valStr) {
+        case "Active": return "نشط";
+        case "Inactive": return "غير نشط";
+        case "Unpaid": return "غير مدفوع";
+        case "Paid": return "مدفوع";
+        case "Fully Paid": return "مدفوع بالكامل";
+        case "Partially Paid": return "مدفوع جزئياً";
+        case "Debit": return "مدين";
+        case "Credit": return "دائن";
+        case "Production": return "الإنتاج الفعلي";
+        case "Daily": return "يومياً";
+        case "Administrator": return "مدير النظام العام";
+        case "Financial Manager": return "المدير المالي";
+        case "Inventory Controller": return "مراقب حركة المخزون";
+        case "Sales Executive": return "مسؤول مبيعات";
+        case "Purchasing Officer": return "مسؤول مشتريات";
+        case "General Cashier": return "أمين الخزينة العام";
+        case "Auditor": return "مراقب مالي داخلي";
+        case "HR Officer": return "مسؤول الموارد البشرية";
+        case "Warehouse Operator": return "أمين مستودع";
+        case "Guest Account": return "حساب زائر";
+        case "Draft": return "مسودة";
+        case "Approved": return "معتمد";
+        case "Completed": return "مكتمل";
+        case "Pending": return "قيد الانتظار";
+        case "Cancelled": return "ملغي";
+        case "FIFO": return "الوارد أولاً يصرف أولاً (FIFO)";
+        default: return valStr;
+      }
+    }
+    return valStr;
+  };
+
+  const t = uiTranslations[language];
+
   const [sidebarSearch, setSidebarSearch] = useState<string>("");
   const [tableSearch, setTableSearch] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -320,6 +723,7 @@ export default function App() {
   
   // Dashboard Sub-navigation Tab
   const [activeDashboardTab, setActiveDashboardTab] = useState<"metrics" | "erd" | "cutting" | "pricing">("metrics");
+  const [isTraderGuideOpen, setIsTraderGuideOpen] = useState<boolean>(true);
   
   // Steel Cutting Simulator State (from the user's ERP Mind Map)
   const [cutRawLength, setCutRawLength] = useState<number>(2000);
@@ -370,6 +774,9 @@ export default function App() {
   const [isAddingRow, setIsAddingRow] = useState<boolean>(false);
   const [rowForm, setRowForm] = useState<Record<string, any>>({});
   const [showRawTable, setShowRawTable] = useState<boolean>(false);
+  const [isVatEnabled, setIsVatEnabled] = useState<boolean>(false);
+  const [viewingRowData, setViewingRowData] = useState<any | null>(null);
+  const [viewingRowIndex, setViewingRowIndex] = useState<number | null>(null);
 
   // Inventory Reconciliation States
   const [reconciliationActive, setReconciliationActive] = useState<boolean>(false);
@@ -378,6 +785,8 @@ export default function App() {
   const [reconPhysicalQty, setReconPhysicalQty] = useState<string>("");
   const [reconReason, setReconReason] = useState<string>("فروقات تسوية سنوية / Annual adjustment");
   const [reconApprover, setReconApprover] = useState<string>("E003");
+  const [reconPhoto, setReconPhoto] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
 
   // Relational Table Explorer State
   const [exploringRow, setExploringRow] = useState<any | null>(null);
@@ -513,6 +922,12 @@ export default function App() {
     );
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!reconciliationActive && isCameraActive) {
+      stopReconCamera();
+    }
+  }, [reconciliationActive]);
 
   // --- FETCH SHEETS FROM SERVER ON MOUNT & TOKEN CHANGE ---
   useEffect(() => {
@@ -1987,10 +2402,52 @@ export default function App() {
     setReconciliationActive(false);
   }, [selectedSheetId]);
 
+  const logSystemAction = async (action: string, details: string) => {
+    const newLog = {
+      LogID: `AUD-${Math.floor(10000 + Math.random() * 90000)}`,
+      Timestamp: new Date().toISOString().split(".")[0],
+      Username: user ? user.email?.split("@")[0] : "admin.mahmoud",
+      Action: action,
+      IPAddress: "197.34.112.5",
+      Details: details
+    };
+
+    // Prepend locally
+    setSheets((prevSheets) =>
+      prevSheets.map((sh) => {
+        if (sh.id === "auditLog") {
+          return { ...sh, rows: [newLog, ...sh.rows] };
+        }
+        return sh;
+      })
+    );
+
+    // Sync with Server
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      await fetch("/api/sheets/auditLog/rows", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ row: newLog })
+      });
+    } catch (err) {
+      console.error("Failed to send audit log to server:", err);
+    }
+  };
+
   const handleEditRow = (index: number) => {
     setEditingRowIndex(index);
-    setRowForm({ ...activeSheet.rows[index] });
+    const row = activeSheet.rows[index];
+    setRowForm({ ...row });
     setIsAddingRow(false);
+
+    // Initialize isVatEnabled if editing an invoice
+    if (selectedSheetId === "salesInvoices" || selectedSheetId === "purchaseInvoices") {
+      setIsVatEnabled((parseFloat(row.VATAmount) || 0) > 0);
+    }
   };
 
   const handleAddRowClick = () => {
@@ -2003,6 +2460,11 @@ export default function App() {
     setRowForm(emptyRow);
     setIsAddingRow(true);
     setEditingRowIndex(null);
+
+    // Default VAT to false for new invoices
+    if (selectedSheetId === "salesInvoices" || selectedSheetId === "purchaseInvoices") {
+      setIsVatEnabled(false);
+    }
   };
 
   const handleSaveRow = async () => {
@@ -2086,6 +2548,12 @@ export default function App() {
             body: JSON.stringify({ row: rowForm })
           });
         }
+        // Log action successfully synced
+        const keyVal = rowForm.InvoiceNo || rowForm.PurchaseInvoiceNo || rowForm.CustomerCode || rowForm.ItemCode || rowForm.SupplierCode || rowForm.SettingID || rowForm.EmployeeID || rowForm.Username || "RECORD";
+        logSystemAction(
+          isAddingRow ? `CREATE_${selectedSheetId.toUpperCase()}` : `UPDATE_${selectedSheetId.toUpperCase()}`,
+          `${isAddingRow ? "تم إنشاء" : "تم تعديل"} سجل في جدول ${activeSheet.arabicName || selectedSheetId}: ${keyVal}`
+        );
       } catch (err) {
         console.error("Failed to sync sheet row save with server:", err);
       }
@@ -2101,14 +2569,26 @@ export default function App() {
     const dbId = rowToDelete?._dbId;
 
     showConfirm(
-      "Confirm Delete",
-      "Are you sure you want to delete this business record from the database?",
+      "Confirm Delete / تأكيد الحذف",
+      `هل أنت متأكد من رغبتك في حذف هذا السجل نهائياً من قاعدة بيانات النظام؟ / Are you sure you want to delete this business record from the database?`,
       async () => {
+        const isSalesInvoice = selectedSheetId === "salesInvoices";
+        const isPurchaseInvoice = selectedSheetId === "purchaseInvoices";
+        const invoiceNo = rowToDelete.InvoiceNo || rowToDelete.PurchaseInvoiceNo;
+
         const updatedSheets = sheets.map((sh) => {
-          if (sh.id !== selectedSheetId) return sh;
-          const updatedRows = [...sh.rows];
-          updatedRows.splice(index, 1);
-          return { ...sh, rows: updatedRows };
+          if (sh.id === selectedSheetId) {
+            const updatedRows = [...sh.rows];
+            updatedRows.splice(index, 1);
+            return { ...sh, rows: updatedRows };
+          }
+          if (isSalesInvoice && sh.id === "salesInvoiceLines") {
+            return { ...sh, rows: sh.rows.filter(r => String(r.InvoiceNo) !== String(invoiceNo)) };
+          }
+          if (isPurchaseInvoice && sh.id === "purchaseInvoiceLines") {
+            return { ...sh, rows: sh.rows.filter(r => String(r.PurchaseInvoiceNo) !== String(invoiceNo)) };
+          }
+          return sh;
         });
         setSheets(updatedSheets);
 
@@ -2125,12 +2605,25 @@ export default function App() {
             method: "DELETE",
             headers
           });
+
+          // Log the deletion action
+          const keyVal = rowToDelete.InvoiceNo || rowToDelete.PurchaseInvoiceNo || rowToDelete.CustomerCode || rowToDelete.ItemCode || rowToDelete.SupplierCode || rowToDelete.SettingID || rowToDelete.EmployeeID || rowToDelete.Username || "RECORD";
+          logSystemAction(
+            `DELETE_${selectedSheetId.toUpperCase()}`,
+            `تم حذف سجل بالكامل من جدول ${activeSheet.arabicName || selectedSheetId}: ${keyVal}. تم إزالة كافة العلاقات والبنود التابعة له تلقائياً.`
+          );
+
+          showToast(
+            "تم الحذف وتحديث سجل العمليات / Deleted & Logged",
+            `تم حذف السجل ${keyVal} وتسجيل العملية بنجاح في سجل الأمان النظامي.`,
+            "success"
+          );
         } catch (err) {
           console.error("Failed to sync sheet row deletion with server:", err);
         }
       },
-      "Delete Record",
-      "Cancel"
+      "حذف السجل (Delete)",
+      "إلغاء (Cancel)"
     );
   };
 
@@ -2170,6 +2663,346 @@ export default function App() {
 
   // --- SELECTION STATE & BULK ACTIONS ---
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [isBulkUpdateDrawerOpen, setIsBulkUpdateDrawerOpen] = useState(false);
+  const [selectedBulkStatus, setSelectedBulkStatus] = useState<string>("");
+
+  // --- INVOICE MULTI-LINE STATE & METHODS ---
+  const [invoiceLines, setInvoiceLines] = useState<any[]>([]);
+
+  useEffect(() => {
+    const isInvoice = selectedSheetId === "salesInvoices" || selectedSheetId === "purchaseInvoices";
+    if (!isInvoice) return;
+
+    const isSales = selectedSheetId === "salesInvoices";
+    const invoiceNoKey = isSales ? "InvoiceNo" : "PurchaseInvoiceNo";
+    const orderNoKey = isSales ? "OrderNo" : "PONo";
+    const partnerKey = isSales ? "CustomerCode" : "SupplierCode";
+    const netTotalKey = isSales ? "NetTotal" : "NetTotalEGP";
+    const vatAmountKey = isSales ? "VATAmount" : "VATAmountEGP";
+    const grandTotalKey = isSales ? "GrandTotal" : "GrandTotalEGP";
+    const paidAmountKey = isSales ? "PaidAmount" : "PaidAmountEGP";
+
+    const invoiceNoVal = rowForm[invoiceNoKey];
+
+    if (isAddingRow) {
+      const prefix = isSales ? "SI-2026-" : "PI-2026-";
+      const existingInvoices = sheets.find(sh => sh.id === selectedSheetId)?.rows || [];
+      const nextNum = existingInvoices.length + 1;
+      const defaultInvoiceNo = `${prefix}${String(nextNum).padStart(3, "0")}`;
+
+      setRowForm(prev => {
+        if (prev?.[invoiceNoKey]) return prev;
+        return {
+          [invoiceNoKey]: defaultInvoiceNo,
+          InvoiceDate: new Date().toISOString().split("T")[0],
+          [partnerKey]: "",
+          [orderNoKey]: "",
+          [netTotalKey]: 0,
+          [vatAmountKey]: 0,
+          [grandTotalKey]: 0,
+          [paidAmountKey]: 0,
+          Status: "Unpaid"
+        };
+      });
+      setInvoiceLines([]);
+    } else if (editingRowIndex !== null && invoiceNoVal) {
+      const childSheetId = isSales ? "salesInvoiceLines" : "purchaseInvoiceLines";
+      const childSheet = sheets.find(s => s.id === childSheetId);
+      
+      const lineInvoiceKey = isSales ? "InvoiceNo" : "PurchaseInvoiceNo";
+      const lineUnitPriceKey = isSales ? "UnitPrice" : "UnitPriceFC";
+      const lineSubTotalKey = isSales ? "SubTotal" : "SubTotalEGP";
+
+      const lines = childSheet
+        ? childSheet.rows.filter(r => String(r[lineInvoiceKey]) === String(invoiceNoVal))
+        : [];
+      
+      setInvoiceLines(lines.map((line, idx) => ({
+        ...line,
+        id: line.LineID || `LINE-${idx}`,
+        UnitPrice: parseFloat(line[lineUnitPriceKey]) || 0,
+        SubTotal: parseFloat(line[lineSubTotalKey]) || 0,
+      })));
+    }
+  }, [isAddingRow, editingRowIndex, selectedSheetId, rowForm?.InvoiceNo, rowForm?.PurchaseInvoiceNo]);
+
+  const handleSaveInvoice = async (header: any, lines: any[]) => {
+    const isSales = selectedSheetId === "salesInvoices";
+    const childSheetId = isSales ? "salesInvoiceLines" : "purchaseInvoiceLines";
+
+    const invoiceNoKey = isSales ? "InvoiceNo" : "PurchaseInvoiceNo";
+    const orderNoKey = isSales ? "OrderNo" : "PONo";
+    const partnerKey = isSales ? "CustomerCode" : "SupplierCode";
+    const netTotalKey = isSales ? "NetTotal" : "NetTotalEGP";
+    const vatAmountKey = isSales ? "VATAmount" : "VATAmountEGP";
+    const grandTotalKey = isSales ? "GrandTotal" : "GrandTotalEGP";
+    const paidAmountKey = isSales ? "PaidAmount" : "PaidAmountEGP";
+
+    const invoiceNo = header[invoiceNoKey] || "INV-TEMP";
+
+    // 1. Calculate values
+    const netTotal = lines.reduce((sum, line) => sum + ((parseFloat(line.Quantity) || 0) * (parseFloat(line.UnitPrice) || 0)), 0);
+    const vatAmount = isVatEnabled ? parseFloat((netTotal * 0.14).toFixed(2)) : 0;
+    const grandTotal = parseFloat((netTotal + vatAmount).toFixed(2));
+    
+    const paidVal = parseFloat(header[paidAmountKey]) || 0;
+    let status = header.Status || "Unpaid";
+    if (paidVal >= grandTotal) {
+      status = "Fully Paid";
+    } else if (paidVal > 0) {
+      status = "Partially Paid";
+    } else {
+      status = "Unpaid";
+    }
+
+    const finalHeader = {
+      ...header,
+      [netTotalKey]: netTotal,
+      [vatAmountKey]: vatAmount,
+      [grandTotalKey]: grandTotal,
+      [paidAmountKey]: paidVal,
+      Status: status,
+    };
+
+    // Prepare line rows with proper structures
+    const prefix = isSales ? "SIL-" : "PIL-";
+    const lineUnitPriceKey = isSales ? "UnitPrice" : "UnitPriceFC";
+    const lineSubTotalKey = isSales ? "SubTotal" : "SubTotalEGP";
+
+    const finalLines = lines.map((line, idx) => ({
+      LineID: line.LineID || `${prefix}${invoiceNo}-${idx + 1}-${Math.floor(Math.random() * 1000)}`,
+      [invoiceNoKey]: invoiceNo,
+      ItemCode: line.ItemCode || "CUSTOM-ITEM",
+      Quantity: parseFloat(line.Quantity) || 0,
+      [lineUnitPriceKey]: parseFloat(line.UnitPrice) || 0,
+      [lineSubTotalKey]: parseFloat(((parseFloat(line.Quantity) || 0) * (parseFloat(line.UnitPrice) || 0)).toFixed(2))
+    }));
+
+    // Optimistic UI updates
+    const updatedSheets = sheets.map((sh) => {
+      if (sh.id === selectedSheetId) {
+        let updatedRows = [...sh.rows];
+        if (isAddingRow) {
+          updatedRows.unshift(finalHeader);
+        } else if (editingRowIndex !== null) {
+          updatedRows[editingRowIndex] = finalHeader;
+        }
+        return { ...sh, rows: updatedRows };
+      }
+      if (sh.id === childSheetId) {
+        // Filter out old lines for this invoiceNo and prepend new lines
+        const filteredRows = sh.rows.filter(r => String(r[invoiceNoKey]) !== String(invoiceNo));
+        return { ...sh, rows: [...finalLines, ...filteredRows] };
+      }
+      return sh;
+    });
+    setSheets(updatedSheets);
+
+    // Sync with Server
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    try {
+      // Step A: Save Header Row
+      let savedHeader = finalHeader;
+      if (isAddingRow) {
+        const res = await fetch(`/api/sheets/${selectedSheetId}/rows`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ row: finalHeader })
+        });
+        const data = await res.json();
+        if (res.ok && data.row) {
+          savedHeader = data.row;
+          // Update local state with real saved header (to get _dbId)
+          setSheets(prevSheets => prevSheets.map(sh => {
+            if (sh.id !== selectedSheetId) return sh;
+            const updated = [...sh.rows];
+            updated[0] = savedHeader;
+            return { ...sh, rows: updated };
+          }));
+        }
+      } else if (editingRowIndex !== null) {
+        const rowToUpdate = activeSheet.rows[editingRowIndex];
+        const dbId = rowToUpdate?._dbId;
+        const url = dbId
+          ? `/api/sheets/${selectedSheetId}/rows/${editingRowIndex}?dbId=${dbId}`
+          : `/api/sheets/${selectedSheetId}/rows/${editingRowIndex}`;
+
+        await fetch(url, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({ row: finalHeader })
+        });
+      }
+
+      // Step B: Sync Invoice Lines
+      const syncRes = await fetch(`/api/sheets/${childSheetId}/sync-invoice-lines`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ invoiceNo, lines: finalLines })
+      });
+      const syncData = await syncRes.json();
+      if (syncRes.ok && syncData.lines) {
+        // Update local lines with real saved items
+        setSheets(prevSheets => prevSheets.map(sh => {
+          if (sh.id !== childSheetId) return sh;
+          const filtered = sh.rows.filter(r => String(r[invoiceNoKey]) !== String(invoiceNo));
+          return { ...sh, rows: [...syncData.lines, ...filtered] };
+        }));
+      }
+
+      showAlert(
+        "تم حفظ الفاتورة بنجاح / Saved Successfully",
+        `تم حفظ الفاتورة رقم ${invoiceNo} وتحديث عدد ${finalLines.length} بند بنجاح.`
+      );
+
+      // Log invoice action
+      logSystemAction(
+        isAddingRow ? "CREATE_INVOICE" : "UPDATE_INVOICE",
+        `${isAddingRow ? "تم إصدار" : "تم تعديل"} فاتورة ${isSales ? "مبيعات" : "مشتريات"} رقم: ${invoiceNo} بقيمة إجمالية: ${grandTotal} ج.م وبعدد بنود: ${finalLines.length}`
+      );
+    } catch (err) {
+      console.error("Failed to sync invoice header or lines with server:", err);
+      showAlert("Error Saving Invoice", "حدث خطأ أثناء حفظ الفاتورة.");
+    }
+
+    setEditingRowIndex(null);
+    setIsAddingRow(false);
+    setRowForm({});
+    setInvoiceLines([]);
+  };
+
+  const handleAutoFillTestData = () => {
+    const isInvoiceSheet = selectedSheetId === "salesInvoices" || selectedSheetId === "purchaseInvoices";
+
+    const clientNames = ["شركة رضا الفولي للتوريدات", "مجموعة حديد الجزيرة", "المصريين لتجارة الاستانلس", "النصر للمقاولات", "أولاد حسن شاهين"];
+    const supplierNames = ["الشركة المصرية للأستيل", "مجموعة عز الدخيلة", "العالمية للاستيراد والتصدير", "البركة للتجارة", "مسبك الدلتا الحديث"];
+    const itemNames = [
+      "الواح 304مط 2مم*1250*2500",
+      "مواسير 2بوصة 304 خفيفة",
+      "زاوية استينلس 304 مقاس 4سم",
+      "خردة صهر استانلس ستيل 316",
+      "الواح ليزر ذهبي 0.8مم"
+    ];
+    const paymentMethods = ["نقدي", "فودافون كاش", "انستا باي", "شيك بنكي", "تحويل بنكي"];
+    const randomElement = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+
+    if (isInvoiceSheet) {
+      const isSales = selectedSheetId === "salesInvoices";
+      const prefix = isSales ? "SI-2026-" : "PI-2026-";
+      const nextNum = (sheets.find(sh => sh.id === selectedSheetId)?.rows || []).length + 101 + Math.floor(Math.random() * 800);
+      const invoiceNo = `${prefix}${nextNum}`;
+
+      const partnerSheetId = isSales ? "customers" : "suppliers";
+      const partnerKey = isSales ? "CustomerCode" : "SupplierCode";
+      const partnerRows = sheets.find(sh => sh.id === partnerSheetId)?.rows || [];
+      const chosenPartner = partnerRows.length > 0 ? randomElement(partnerRows)[partnerKey] : (isSales ? "CUST-001" : "SUPP-001");
+
+      const itemsRows = sheets.find(sh => sh.id === "items")?.rows || [];
+      const generatedLines = Array.from({ length: 2 + Math.floor(Math.random() * 2) }).map((_, idx) => {
+        const matchedItem = itemsRows.length > 0 ? randomElement(itemsRows) : null;
+        const itemCode = matchedItem ? matchedItem.ItemCode : `ITEM-ST-${101 + idx}`;
+        const quantity = Math.floor(Math.random() * 45) + 5;
+        const unitPrice = Math.floor(Math.random() * 400) + 50;
+        return {
+          id: `LINE-${Date.now()}-${idx}-${Math.floor(Math.random() * 1000)}`,
+          ItemCode: itemCode,
+          Quantity: quantity,
+          UnitPrice: unitPrice,
+        };
+      });
+
+      const netTotal = generatedLines.reduce((sum, line) => sum + (line.Quantity * line.UnitPrice), 0);
+      const vatAmount = parseFloat((netTotal * 0.14).toFixed(2));
+      const grandTotal = parseFloat((netTotal + vatAmount).toFixed(2));
+      const payChoices = [0, grandTotal, parseFloat((grandTotal / 2).toFixed(2))];
+      const paidAmount = randomElement(payChoices);
+
+      setRowForm({
+        InvoiceNo: invoiceNo,
+        InvoiceDate: new Date().toISOString().split("T")[0],
+        [partnerKey]: chosenPartner,
+        OrderNo: isSales ? `SO-2026-${nextNum}` : `PO-2026-${nextNum}`,
+        NetTotal: netTotal,
+        VATAmount: vatAmount,
+        GrandTotal: grandTotal,
+        PaidAmount: paidAmount,
+        Status: paidAmount >= grandTotal ? "Fully Paid" : paidAmount > 0 ? "Partially Paid" : "Unpaid"
+      });
+
+      setInvoiceLines(generatedLines);
+      showAlert("تعبئة تلقائية ناجحة", "تمت تعبئة بيانات الفاتورة والبنود العشوائية بنجاح.");
+    } else {
+      const newForm: Record<string, any> = {};
+      activeSheet.columns.forEach((col) => {
+        const key = col.key;
+        const type = col.type;
+
+        if (key === "CustomerCode") {
+          const existing = sheets.find(sh => sh.id === "customers")?.rows || [];
+          newForm[key] = existing.length > 0 ? randomElement(existing).CustomerCode : `CUST-${Math.floor(Math.random()*900+100)}`;
+        } else if (key === "SupplierCode") {
+          const existing = sheets.find(sh => sh.id === "suppliers")?.rows || [];
+          newForm[key] = existing.length > 0 ? randomElement(existing).SupplierCode : `SUPP-${Math.floor(Math.random()*900+100)}`;
+        } else if (key === "ItemCode") {
+          const existing = sheets.find(sh => sh.id === "items")?.rows || [];
+          newForm[key] = existing.length > 0 ? randomElement(existing).ItemCode : `ITEM-${Math.floor(Math.random()*900+100)}`;
+        } else if (key === "WarehouseCode" || key === "FromWarehouseCode" || key === "ToWarehouseCode") {
+          const existing = sheets.find(sh => sh.id === "warehouses")?.rows || [];
+          newForm[key] = existing.length > 0 ? randomElement(existing).WarehouseCode : `W00${Math.floor(Math.random()*3+1)}`;
+        } else if (key === "SalesPersonCode") {
+          const existing = sheets.find(sh => sh.id === "salesPersons")?.rows || [];
+          newForm[key] = existing.length > 0 ? randomElement(existing).SalesPersonCode : `SP00${Math.floor(Math.random()*3+1)}`;
+        } else if (key === "BankCode" || key === "BankID") {
+          const existing = sheets.find(sh => sh.id === "banks")?.rows || [];
+          newForm[key] = existing.length > 0 ? randomElement(existing).BankCode : `BANK00${Math.floor(Math.random()*2+1)}`;
+        } else if (key === "AccountID" || key === "CashAccountCode") {
+          const existing = sheets.find(sh => sh.id === "cashAccounts")?.rows || [];
+          newForm[key] = existing.length > 0 ? randomElement(existing).CashAccountCode : `ACC00${Math.floor(Math.random()*2+1)}`;
+        } else if (key === "CustomerName" || (key === "ArabicName" && selectedSheetId === "customers")) {
+          newForm[key] = randomElement(clientNames);
+        } else if (key === "SupplierName" || (key === "ArabicName" && selectedSheetId === "suppliers")) {
+          newForm[key] = randomElement(supplierNames);
+        } else if (key === "ItemName" || (key === "ArabicName" && selectedSheetId === "items") || (key === "Description" && selectedSheetId === "items")) {
+          newForm[key] = randomElement(itemNames);
+        } else if (key.includes("Phone") || key.includes("Mobile")) {
+          newForm[key] = `01${Math.floor(Math.random()*90000000+10000000)}`;
+        } else if (key.includes("Email")) {
+          newForm[key] = `test.${Math.floor(Math.random()*100)}@steelco.eg`;
+        } else if (key.includes("Address")) {
+          newForm[key] = randomElement(["السبتية، القاهرة", "العاشر من رمضان، المنطقة الصناعية", "قليوب، طريق إسكندرية الزراعي", "وسط البلد، الإسكندرية"]);
+        } else if (key === "PaymentMethod" || key === "Type") {
+          newForm[key] = randomElement(paymentMethods);
+        } else if (key.includes("Date")) {
+          newForm[key] = new Date().toISOString().split("T")[0];
+        } else if (key === "Status") {
+          newForm[key] = randomElement(["Active", "Approved", "Completed", "Paid"]);
+        } else if (key.includes("No") || key.includes("No_") || key.includes("ID") || key.includes("Code")) {
+          newForm[key] = `${key.toUpperCase().slice(0, 3)}-2026-${Math.floor(Math.random()*9000+1000)}`;
+        } else {
+          if (type === "number" || type === "currency") {
+            if (key.includes("Price") || key.includes("Rate") || key.includes("Amount") || key.includes("Balance") || key.includes("Limit")) {
+              newForm[key] = Math.floor(Math.random() * 8500) + 1500;
+            } else {
+              newForm[key] = Math.floor(Math.random() * 90) + 10;
+            }
+          } else if (type === "boolean") {
+            newForm[key] = Math.random() > 0.4;
+          } else if (type === "date") {
+            newForm[key] = new Date().toISOString().split("T")[0];
+          } else {
+            newForm[key] = `قيمة اختبارية لـ ${col.label}`;
+          }
+        }
+      });
+
+      setRowForm(newForm);
+      showAlert("تعبئة تلقائية ناجحة", "تم ملء الحقول ببيانات عشوائية ذكية ومطابقة لنظام الحديد.");
+    }
+  };
 
   const toggleRowSelection = (row: any) => {
     setSelectedRows((prev) =>
@@ -2234,6 +3067,8 @@ export default function App() {
     });
     setSheets(updatedSheets);
     setSelectedRows([]);
+    setIsBulkUpdateDrawerOpen(false);
+    setSelectedBulkStatus("");
     showAlert("Status Updated", `Successfully updated the status of ${selectedRows.length} items to "${newStatus}".`);
   };
 
@@ -2301,7 +3136,8 @@ export default function App() {
     physicalQty: number,
     diffQty: number,
     reason: string,
-    approver: string
+    approver: string,
+    photoUrl?: string | null
   ) => {
     const warehousesSheet = sheets.find(s => s.id === "warehouses");
     const itemsSheet = sheets.find(s => s.id === "items");
@@ -2435,6 +3271,14 @@ export default function App() {
           <p class="font-bold text-slate-900">سبب الفروقات والإجراء التصحيحي المتخذ:</p>
           <p><span class="font-semibold text-slate-600">السبب المسجل:</span> ${reason}</p>
           <p><span class="font-semibold text-slate-600">الإجراء المتخذ:</span> تم قيد تسوية جردية وترحيل حركة مخازن للتحديث التلقائي الفوري لتلافي الفروقات بالنظام وتحقيق المطابقة الكاملة.</p>
+          ${photoUrl ? `
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <p class="font-bold text-slate-900 mb-2">📷 صورة إثبات حالة الفروقات بالموقع (Proof of Condition):</p>
+            <div class="flex justify-start">
+              <img src="${photoUrl}" class="max-w-[400px] max-h-[300px] rounded-lg border border-slate-300 shadow-sm object-cover" />
+            </div>
+          </div>
+          ` : ''}
         </div>
 
         <div class="grid grid-cols-3 gap-6 text-center text-xs mt-12">
@@ -2512,7 +3356,8 @@ export default function App() {
       DiffQty: diffQty,
       Reason: reconReason,
       ApprovedBy: reconApprover,
-      Date: new Date().toISOString().split('T')[0]
+      Date: new Date().toISOString().split('T')[0],
+      Photo: reconPhoto
     };
     
     const updatedSheets = sheets.map(sh => {
@@ -2580,6 +3425,53 @@ export default function App() {
     );
     
     setReconPhysicalQty("");
+    setReconPhoto(null);
+    setIsCameraActive(false);
+  };
+
+  const startReconCamera = async () => {
+    try {
+      setIsCameraActive(true);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
+      setTimeout(() => {
+        const videoElement = document.getElementById("recon-video") as HTMLVideoElement;
+        if (videoElement) {
+          videoElement.srcObject = stream;
+          videoElement.play().catch(e => console.error("Video play failed:", e));
+        }
+      }, 100);
+    } catch (err) {
+      console.error("Camera access failed:", err);
+      showAlert("خطأ في تشغيل الكاميرا / Camera Error", "فشل الوصول إلى الكاميرا لمسح وإثبات الحالة. يرجى التأكد من منح الإذن.");
+      setIsCameraActive(false);
+    }
+  };
+
+  const stopReconCamera = () => {
+    const videoElement = document.getElementById("recon-video") as HTMLVideoElement;
+    if (videoElement && videoElement.srcObject) {
+      const stream = videoElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setIsCameraActive(false);
+  };
+
+  const captureReconPhoto = () => {
+    const videoElement = document.getElementById("recon-video") as HTMLVideoElement;
+    if (!videoElement) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = videoElement.videoWidth || 640;
+    canvas.height = videoElement.videoHeight || 480;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg");
+      setReconPhoto(dataUrl);
+    }
+    stopReconCamera();
   };
 
   const renderInventoryReconciliationView = () => {
@@ -2635,7 +3527,8 @@ export default function App() {
               Number(reconPhysicalQty) || 0,
               diffQty,
               reconReason,
-              reconApprover
+              reconApprover,
+              reconPhoto
             )}
             disabled={reconPhysicalQty === "" || Number(reconPhysicalQty) < 0}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all border border-indigo-500 shadow-md"
@@ -2795,6 +3688,86 @@ export default function App() {
                   </div>
                 )}
               </div>
+
+              {/* Proof of Condition Camera Block */}
+              {reconPhysicalQty !== "" && diffQty !== 0 && (
+                <div className="border border-indigo-100 rounded-xl p-4 bg-indigo-50/20 flex flex-col gap-3 mt-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-indigo-950 flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-indigo-600" />
+                      إرفاق إثبات حالة الفروقات / Proof of Condition Photo
+                    </span>
+                    {reconPhoto && (
+                      <span className="bg-emerald-50 text-emerald-700 text-[9px] px-2 py-0.5 rounded-full font-bold border border-emerald-200">
+                        تم التقاط الصورة / Captured
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-[10px] text-slate-500 leading-relaxed font-sans">
+                    تم رصد اختلاف بين الرصيد الفعلي والدفتري. يرجى استخدام كاميرا الجهاز لالتقاط صورة لإثبات الحالة المادية للصلب (مثل التلف، عيوب الركن، أو ملصق الوزن) لتضمينها في تقرير التسوية المعتمد.
+                  </p>
+
+                  {!isCameraActive && !reconPhoto ? (
+                    <button
+                      type="button"
+                      onClick={startReconCamera}
+                      className="w-full bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 hover:text-indigo-800 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border border-indigo-200 flex items-center justify-center gap-2"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>تشغيل الكاميرا والتقاط صورة / Launch Camera</span>
+                    </button>
+                  ) : isCameraActive ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="relative w-full max-w-sm rounded-lg overflow-hidden border border-slate-300 bg-black aspect-video flex items-center justify-center">
+                        <video id="recon-video" className="w-full h-full object-cover" playsInline muted />
+                        <div className="absolute top-2 right-2 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+                          مباشر / LIVE
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 w-full max-w-sm">
+                        <button
+                          type="button"
+                          onClick={captureReconPhoto}
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Camera className="w-4 h-4" />
+                          <span>التقاط الصورة / Take Photo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={stopReconCamera}
+                          className="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                        >
+                          إلغاء / Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="relative w-full max-w-xs rounded-lg overflow-hidden border border-slate-300 shadow-sm bg-slate-100">
+                        <img src={reconPhoto} className="w-full object-cover max-h-[180px]" alt="Proof of Condition" />
+                        <button
+                          type="button"
+                          onClick={() => setReconPhoto(null)}
+                          className="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white p-1.5 rounded-full shadow-md transition-all cursor-pointer border-none"
+                          title="حذف الصورة / Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={startReconCamera}
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>إعادة التقاط صورة أخرى / Retake</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Discrepancy Reason & Authorization Block */}
@@ -2884,6 +3857,12 @@ export default function App() {
                         <span className="text-slate-450 font-bold block">سبب التسوية:</span>
                         <span className="font-semibold text-slate-850 leading-tight">{adj.Reason || "تسوية جردية عامة"}</span>
                       </div>
+                      {adj.Photo && (
+                        <div className="col-span-2 mt-2 pt-2 border-t border-slate-100">
+                          <span className="text-slate-450 font-bold block mb-1">📷 صورة إثبات الحالة المرفقة:</span>
+                          <img src={adj.Photo} className="w-full max-h-[140px] rounded-lg border border-slate-200 object-cover" alt="Proof" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -2919,7 +3898,7 @@ export default function App() {
     );
 
     const renderCardActions = (row: any, originalIdx: number) => (
-      <div className="flex gap-1.5 mt-auto pt-3 border-t border-slate-100 justify-end w-full" id={`smart-actions-${originalIdx}`}>
+      <div className="flex gap-1.5 mt-auto pt-3 border-t border-slate-100 justify-end w-full" id={`smart-actions-${originalIdx}`} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => {
             setExploringRow(row);
@@ -2932,6 +3911,18 @@ export default function App() {
         >
           <Network className="w-3.5 h-3.5" />
           <span>العلاقات</span>
+        </button>
+        <button
+          onClick={() => {
+            setViewingRowData(row);
+            setViewingRowIndex(originalIdx);
+          }}
+          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[10px] font-bold"
+          title="عرض التفاصيل الكاملة"
+          id={`smart-view-btn-${originalIdx}`}
+        >
+          <Eye className="w-3.5 h-3.5" />
+          <span>عرض</span>
         </button>
         <button
           onClick={() => handleEditRow(originalIdx)}
@@ -2985,9 +3976,10 @@ export default function App() {
       return (
         <div className="flex flex-col gap-4" id="smart-view-contacts" dir="rtl">
           {renderSearchBar()}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="contacts-card-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" id="contacts-card-grid">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const name = isCustomer ? row.CompanyName : row.Name;
               const code = isCustomer ? row.CustomerCode : row.SupplierCode;
               const credit = isCustomer ? row.CreditLimit : null;
@@ -2996,9 +3988,24 @@ export default function App() {
               const rating = row.Rating || "A";
               
               return (
-                <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-xs flex flex-col gap-3.5 hover:shadow-md transition-all duration-200" id={`contact-card-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`border rounded-2xl p-5 shadow-xs flex flex-col gap-3.5 hover:shadow-xl hover:scale-105 transition-all duration-300 transform cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                  id={`contact-card-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRowSelection(row)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                        id={`contact-checkbox-${rIdx}`}
+                      />
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
                         isCustomer ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-indigo-50 text-indigo-700 border border-indigo-100"
                       }`} id={`contact-avatar-${rIdx}`}>
@@ -3054,9 +4061,10 @@ export default function App() {
       return (
         <div className="flex flex-col gap-4" id="smart-view-orders" dir="rtl">
           {renderSearchBar()}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5" id="orders-card-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5" id="orders-card-grid">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const orderNo = isSales ? row.OrderNo : row.PurchaseOrderNo;
               const date = isSales ? row.OrderDate : row.OrderDate;
               const partner = isSales ? row.CustomerCode : row.SupplierCode;
@@ -3064,9 +4072,24 @@ export default function App() {
               const status = row.OrderStatus || row.Status || "Confirmed";
               
               return (
-                <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-xs flex flex-col gap-4 hover:shadow-md transition-all duration-200" id={`order-card-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`border rounded-2xl p-5 shadow-xs flex flex-col gap-4 hover:shadow-md transition-all duration-200 cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                  id={`order-card-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRowSelection(row)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                        id={`order-checkbox-${rIdx}`}
+                      />
                       <div className={`p-2 rounded-xl ${isSales ? "bg-emerald-50 text-emerald-700" : "bg-indigo-50 text-indigo-700"}`}>
                         <FileSpreadsheet className="w-5 h-5" />
                       </div>
@@ -3128,9 +4151,10 @@ export default function App() {
       return (
         <div className="flex flex-col gap-4" id="smart-view-checks" dir="rtl">
           {renderSearchBar()}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="checks-card-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6" id="checks-card-grid">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const checkNo = row.CheckNo;
               const date = row.DueDate || row.IssueDate;
               const amount = row.Amount;
@@ -3140,11 +4164,26 @@ export default function App() {
               const type = row.CheckType || "Received";
               
               return (
-                <div key={rIdx} className="bg-gradient-to-br from-slate-50 to-slate-100 hover:from-white hover:to-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all duration-200 relative overflow-hidden flex flex-col gap-4" id={`check-card-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`bg-gradient-to-br from-slate-50 to-slate-100 hover:from-white hover:to-white border-2 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all duration-200 relative overflow-hidden flex flex-col gap-4 cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "border-slate-200"
+                  }`}
+                  id={`check-card-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="absolute top-0 right-0 left-0 h-1.5 bg-slate-900" />
                   
                   <div className="flex justify-between items-start" id={`check-header-${rIdx}`}>
                     <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRowSelection(row)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                        id={`check-checkbox-${rIdx}`}
+                      />
                       <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
                         type === "Received" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
                       }`}>
@@ -3201,28 +4240,29 @@ export default function App() {
         <div className="flex flex-col gap-4" id="smart-view-remnants" dir="rtl">
           {renderSearchBar()}
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2" id="remnants-mini-dashboard">
-            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3" id="remnants-mini-dashboard">
+            <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
               <span className="text-slate-400 font-bold text-[10px] block mb-1">إجمالي الفضلات المتاحة</span>
-              <span className="text-xl font-extrabold text-slate-900 font-mono">{items.filter(i => i.AvailabilityStatus === "Available For Sale").length} فضلات</span>
+              <span className="text-lg sm:text-xl font-extrabold text-slate-900 font-mono">{items.filter(i => i.AvailabilityStatus === "Available For Sale").length} فضلات</span>
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+            <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
               <span className="text-slate-400 font-bold text-[10px] block mb-1">إجمالي الفضلات المحجوزة</span>
-              <span className="text-xl font-extrabold text-indigo-700 font-mono">{items.filter(i => i.AvailabilityStatus === "Reserved").length} فضلات</span>
+              <span className="text-lg sm:text-xl font-extrabold text-indigo-700 font-mono">{items.filter(i => i.AvailabilityStatus === "Reserved").length} فضلات</span>
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+            <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
               <span className="text-slate-400 font-bold text-[10px] block mb-1">الخامات الأكثر تكراراً</span>
-              <span className="text-lg font-extrabold text-emerald-700">Stainless 304</span>
+              <span className="text-base sm:text-lg font-extrabold text-emerald-700">Stainless 304</span>
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+            <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
               <span className="text-slate-400 font-bold text-[10px] block mb-1">الوزن التقريبي للقصاصات</span>
-              <span className="text-xl font-extrabold text-slate-900 font-mono">124.5 كجم</span>
+              <span className="text-lg sm:text-xl font-extrabold text-slate-900 font-mono">124.5 كجم</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="remnants-card-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" id="remnants-card-grid">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const remnantId = row.RemnantID;
               const thick = row.RemainingThick;
               const width = row.RemainingWidth;
@@ -3232,9 +4272,24 @@ export default function App() {
               const status = row.AvailabilityStatus;
               
               return (
-                <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-xs flex flex-col gap-3.5 hover:shadow-md transition-all duration-200 relative overflow-hidden" id={`remnant-card-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`border rounded-2xl p-5 shadow-xs flex flex-col gap-3.5 hover:shadow-md transition-all duration-200 relative overflow-hidden cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                  id={`remnant-card-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRowSelection(row)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                        id={`remnant-checkbox-${rIdx}`}
+                      />
                       <div className="w-8 h-8 rounded bg-slate-100 border border-slate-300 flex items-center justify-center font-bold text-slate-600 text-xs font-mono">
                         {grade}
                       </div>
@@ -3289,9 +4344,10 @@ export default function App() {
       return (
         <div className="flex flex-col gap-4" id="smart-view-manufacturing" dir="rtl">
           {renderSearchBar()}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5" id="manufacturing-card-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5" id="manufacturing-card-grid">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const orderId = isMo ? row.MOID || row.OrderNo : row.WOID || row.WorkOrderNo;
               const date = row.PlannedStartDate || row.OrderDate || "2026-06";
               const item = row.ItemID || row.ItemCode || row.FinishedItemCode || "خامة استيل هندسية";
@@ -3301,9 +4357,24 @@ export default function App() {
               const progress = Math.min(100, Math.round((producedQty / (plannedQty || 1)) * 100)) || 0;
               
               return (
-                <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-xs flex flex-col gap-4 hover:shadow-md transition-all duration-200" id={`manufacturing-card-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`border rounded-2xl p-5 shadow-xs flex flex-col gap-4 hover:shadow-md transition-all duration-200 cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                  id={`manufacturing-card-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRowSelection(row)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                        id={`manufacturing-checkbox-${rIdx}`}
+                      />
                       <div className="bg-emerald-50 text-emerald-700 p-2 rounded-xl">
                         <Factory className="w-5 h-5 animate-pulse" />
                       </div>
@@ -3375,6 +4446,7 @@ export default function App() {
           <div className="space-y-3" id="ledger-timeline-container">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const ref = row.ReferenceNo || row.JournalEntryNo || "JE-2026";
               const date = row.PostDate || row.ValueDate || "2026-06";
               const acct = row.AccountCode || row.GLAccountCode || "GL-1001";
@@ -3383,9 +4455,24 @@ export default function App() {
               const desc = row.Description || row.Narration || "معاملة قيود الحسابات الموحدة";
               
               return (
-                <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-4.5 shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200" id={`ledger-row-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`border rounded-2xl p-4.5 shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200 cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                  id={`ledger-row-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="flex items-start gap-3">
-                    <div className="bg-slate-100 p-2 rounded-xl text-slate-600 shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleRowSelection(row)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0 mt-1"
+                      id={`ledger-checkbox-${rIdx}`}
+                    />
+                    <div className="bg-slate-100 p-2 rounded-xl text-slate-600 shrink-0">
                       <FileSpreadsheet className="w-4 h-4" />
                     </div>
                     <div>
@@ -3426,9 +4513,10 @@ export default function App() {
       return (
         <div className="flex flex-col gap-4" id="smart-view-imports" dir="rtl">
           {renderSearchBar()}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5" id="imports-card-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5" id="imports-card-grid">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const containerId = row.ContainerID || row.ContainerNo;
               const date = row.ExpectedArrivalDate || row.ETADate || "2026-06";
               const supplier = row.SupplierCode || "مورد دولي معتمد";
@@ -3437,9 +4525,24 @@ export default function App() {
               const cost = row.LandedCostValue || row.TotalCostValue || 24000;
               
               return (
-                <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-xs flex flex-col gap-4 hover:shadow-md transition-all duration-200" id={`import-card-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`border rounded-2xl p-5 shadow-xs flex flex-col gap-4 hover:shadow-md transition-all duration-200 cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                  id={`import-card-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRowSelection(row)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                        id={`import-checkbox-${rIdx}`}
+                      />
                       <div className="bg-sky-50 text-sky-700 p-2 rounded-xl">
                         <CloudUpload className="w-5 h-5" />
                       </div>
@@ -3502,18 +4605,34 @@ export default function App() {
       return (
         <div className="flex flex-col gap-4" id="smart-view-inventory" dir="rtl">
           {renderSearchBar()}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="inventory-card-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" id="inventory-card-grid">
             {items.map((row, rIdx) => {
               const originalIdx = activeSheet.rows.indexOf(row);
+              const isSelected = selectedRows.includes(row);
               const title = isLots ? row.LotID || row.LotNumber : row.WarehouseName || row.LocationCode || row.CategoryName;
               const code = isLots ? row.ItemID || row.ItemCode : row.WarehouseCode || row.LocationCode || row.CategoryCode;
               const qty = isLots ? row.QuantityOnHand || row.Qty : row.Location || row.ManagerID || row.ArabicName;
               const status = isLots ? row.QualityStatus || "Good" : "Active";
               
               return (
-                <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-xs flex flex-col gap-3 hover:shadow-md transition-all duration-200" id={`inventory-card-${rIdx}`}>
+                <div
+                  key={rIdx}
+                  className={`border rounded-2xl p-5 shadow-xs flex flex-col gap-3 hover:shadow-md transition-all duration-200 cursor-pointer ${
+                    isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                  id={`inventory-card-${rIdx}`}
+                  onClick={() => toggleRowSelection(row)}
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRowSelection(row)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                        id={`inventory-checkbox-${rIdx}`}
+                      />
                       <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold shrink-0">
                         📦
                       </div>
@@ -3566,9 +4685,10 @@ export default function App() {
     return (
       <div className="flex flex-col gap-4" id="smart-view-generic" dir="rtl">
         {renderSearchBar()}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="generic-card-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" id="generic-card-grid">
           {items.map((row, rIdx) => {
             const originalIdx = activeSheet.rows.indexOf(row);
+            const isSelected = selectedRows.includes(row);
             const firstKey = activeSheet.columns[0]?.key;
             const secondKey = activeSheet.columns[1]?.key;
             const thirdKey = activeSheet.columns[2]?.key;
@@ -3577,9 +4697,24 @@ export default function App() {
             const details = row[thirdKey] ? String(row[thirdKey]) : "سجل تشغيلي إداري";
             
             return (
-              <div key={rIdx} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-xs flex flex-col gap-3 hover:shadow-md transition-all duration-200" id={`generic-card-${rIdx}`}>
+              <div
+                key={rIdx}
+                className={`border rounded-2xl p-5 shadow-xs flex flex-col gap-3 hover:shadow-md transition-all duration-200 cursor-pointer ${
+                  isSelected ? "border-indigo-600 bg-indigo-50/10 ring-1 ring-indigo-500 shadow-indigo-150" : "bg-white border-slate-200 hover:border-slate-300"
+                }`}
+                id={`generic-card-${rIdx}`}
+                onClick={() => toggleRowSelection(row)}
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleRowSelection(row)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer shrink-0"
+                      id={`generic-checkbox-${rIdx}`}
+                    />
                     <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center font-bold text-slate-500 text-xs font-mono">
                       {code.slice(0, 3)}
                     </div>
@@ -3606,31 +4741,62 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans selection:bg-slate-200 selection:text-slate-900" id="app-root">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans selection:bg-slate-200 selection:text-slate-900 transition-all duration-300" id="app-root" dir={language === "ar" ? "rtl" : "ltr"}>
       {/* --- TOP BRAND BAR --- */}
       <header className="border-b border-slate-200 bg-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-40 shadow-sm" id="header-brand-bar">
         <div className="flex items-center gap-3">
-          <div className="bg-slate-900 p-2 rounded flex items-center justify-center text-white font-bold text-xs" id="brand-logo-container">
+          <div className="bg-slate-950 p-3 rounded-xl flex items-center justify-center text-emerald-400 font-extrabold text-sm shadow-md border border-slate-800" id="brand-logo-container">
             IS
           </div>
           <div>
-            <h1 className="text-lg font-bold leading-tight text-slate-900 flex items-center gap-2" id="brand-title">
-              الدولية ستيل <span className="text-slate-400 font-sans text-xs font-normal">| International Steel ERP</span>
+            <h1 className="text-base sm:text-xl font-black leading-tight text-slate-900 flex items-center gap-2" id="brand-title">
+              {t.brandTitle}
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold" id="brand-subtitle">Trading & Supply of Premium Stainless Steel Sheets, Coils & Pipes</p>
+            <p className="text-[10px] tracking-wide text-slate-400 font-bold" id="brand-subtitle">
+              {t.brandSubtitle}
+            </p>
           </div>
         </div>
 
-        {/* --- GOOGLE SECURITY / AUTH CONTROL --- */}
-        <div className="flex items-center gap-3" id="header-controls">
+        {/* --- HEADER CONTROLS --- */}
+        <div className="flex items-center gap-3.5" id="header-controls">
+          {/* --- ACTIVE LANGUAGE SELECTOR --- */}
+          <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1" id="language-capsule-selector">
+            <button
+              onClick={() => setLanguage("ar")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                language === "ar"
+                  ? "bg-slate-950 text-white shadow-sm scale-105"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+              }`}
+              id="lang-selector-ar"
+            >
+              <span>🇸🇦</span>
+              <span>العربية</span>
+            </button>
+            <button
+              onClick={() => setLanguage("en")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                language === "en"
+                  ? "bg-slate-950 text-white shadow-sm scale-105"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+              }`}
+              id="lang-selector-en"
+            >
+              <span>🇺🇸</span>
+              <span>English</span>
+            </button>
+          </div>
+
+          {/* --- GOOGLE SECURITY / AUTH CONTROL --- */}
           {user ? (
-            <div className="flex items-center gap-3 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full text-xs text-slate-700" id="user-profile">
+            <div className="flex items-center gap-3 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl text-xs text-slate-700 shadow-sm" id="user-profile">
               {user.photoURL ? (
                 <img
                   src={user.photoURL}
                   referrerPolicy="no-referrer"
                   alt="avatar"
-                  className="w-5 h-5 rounded-full"
+                  className="w-5 h-5 rounded-full ring-2 ring-slate-200"
                   id="user-avatar"
                 />
               ) : (
@@ -3639,8 +4805,8 @@ export default function App() {
               <span className="text-slate-600 font-mono hidden sm:inline" id="user-email">{user.email}</span>
               <button
                 onClick={handleLogout}
-                title="Disconnect Google Account"
-                className="text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                title={t.logoutTooltip}
+                className="text-slate-400 hover:text-rose-600 transition-colors cursor-pointer p-0.5 rounded-lg hover:bg-slate-200/60"
                 id="logout-button"
               >
                 <LogOut className="w-4 h-4" />
@@ -3649,7 +4815,7 @@ export default function App() {
           ) : (
             <button
               onClick={handleLogin}
-              className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all shadow-sm"
+              className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-all shadow-sm active:scale-95"
               id="login-button"
             >
               <svg className="w-4 h-4" viewBox="0 0 48 48">
@@ -3670,31 +4836,93 @@ export default function App() {
                   d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
                 />
               </svg>
-              Sign in with Google
+              <span>{t.signInWithGoogle}</span>
             </button>
           )}
 
           <button
             onClick={runAudit}
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all shadow-sm"
+            className="flex items-center gap-2 bg-slate-950 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold cursor-pointer transition-all shadow-md active:scale-95 border border-slate-800"
             id="audit-button"
           >
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            Audit Ledger
+            <span>{t.auditLedger}</span>
           </button>
         </div>
       </header>
 
+      {/* --- GLOBAL QUICK NAVIGATION MENU --- */}
+      <div className="bg-slate-900 text-white px-6 py-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 shadow-md sticky top-[73px] z-30" id="global-navigation-bar" dir={language === "ar" ? "rtl" : "ltr"}>
+        <div className="flex items-center gap-2 text-xs text-slate-300 font-bold font-sans">
+          <Compass className="w-4 h-4 text-emerald-400" />
+          <span>{t.quickNavTitle}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { id: "dashboard", label: t.dashboard },
+            { id: "salesInvoices", label: t.salesInvoices },
+            { id: "purchaseInvoices", label: t.purchaseInvoices },
+            { id: "items", label: t.items },
+            { id: "customers", label: t.customers },
+            { id: "suppliers", label: t.suppliers },
+            { id: "auditLog", label: t.auditLog }
+          ].map((navItem) => {
+            const isActive = selectedSheetId === navItem.id;
+            return (
+              <button
+                key={navItem.id}
+                onClick={() => {
+                  setSelectedSheetId(navItem.id);
+                  setIsAddingRow(false);
+                  setEditingRowIndex(null);
+                  setViewingRowData(null);
+                  setViewingRowIndex(null);
+                }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all transform cursor-pointer active:scale-95 ${
+                  isActive
+                    ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 scale-105"
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white"
+                }`}
+                id={`quick-nav-${navItem.id}`}
+              >
+                {navItem.label}
+              </button>
+            );
+          })}
+          
+          <div className="w-px h-5 bg-slate-700 mx-1 hidden lg:block" />
+          
+          <button
+            onClick={() => {
+              setSelectedSheetId("dashboard");
+              setActiveDashboardTab("cutting");
+              setIsAddingRow(false);
+              setEditingRowIndex(null);
+              setViewingRowData(null);
+              setViewingRowIndex(null);
+            }}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all transform cursor-pointer active:scale-95 ${
+              selectedSheetId === "dashboard" && activeDashboardTab === "cutting"
+                ? "bg-amber-500 text-slate-950 shadow-md scale-105"
+                : "bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white"
+            }`}
+            id="quick-nav-cutting"
+          >
+            {t.cuttingSimulator}
+          </button>
+        </div>
+      </div>
+
       {/* --- EXECUTIVE BANNER & OVERVIEW STATS --- */}
-      <section className="bg-slate-50 px-6 py-6 border-b border-slate-200" id="stats-banner-section" dir="rtl">
+      <section className="bg-slate-50 px-6 py-6 border-b border-slate-200" id="stats-banner-section" dir={language === "ar" ? "rtl" : "ltr"}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" id="stats-grid">
           <div className="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow" id="stat-card-sheets">
             <div className="bg-indigo-50 p-2.5 rounded-lg text-indigo-600 border border-indigo-100 shrink-0">
               <Boxes className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">إجمالي جداول البيانات / Total Worksheets</p>
-              <p className="text-sm font-black text-slate-950 mt-0.5">51 جدولاً تشغيلياً <span className="text-[10px] font-normal text-slate-400 font-sans">/ 51 Sheets</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t.totalWorksheets}</p>
+              <p className="text-sm font-black text-slate-950 mt-0.5">{t.sheetsCount}</p>
             </div>
           </div>
 
@@ -3703,8 +4931,8 @@ export default function App() {
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">مبيعات السنة الحالية / Sales YTD</p>
-              <p className="text-sm font-black text-slate-950 mt-0.5">1,545,000 ج.م <span className="text-[10px] font-normal text-slate-400 font-sans">/ EGP 1.54M</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t.salesYTD}</p>
+              <p className="text-sm font-black text-slate-950 mt-0.5">{language === "ar" ? "1,545,000 ج.م" : "EGP 1,545,000"}</p>
             </div>
           </div>
 
@@ -3713,8 +4941,8 @@ export default function App() {
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">رتب الأستانلس المعتمدة / Steel Grades</p>
-              <p className="text-sm font-black text-slate-950 mt-0.5">304 / 316 / 430 <span className="text-[10px] font-normal text-slate-400 font-sans">/ Premium</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t.steelGrades}</p>
+              <p className="text-sm font-black text-slate-950 mt-0.5">{t.supportedGrades}</p>
             </div>
           </div>
 
@@ -3723,18 +4951,18 @@ export default function App() {
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">المستودعات والفروع / Warehouses</p>
-              <p className="text-sm font-black text-slate-950 mt-0.5">10 مستودعات فعالة <span className="text-[10px] font-normal text-slate-400 font-sans">/ 10 Facilities</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t.warehouseCapacity}</p>
+              <p className="text-sm font-black text-slate-950 mt-0.5">{t.warehouseUnits}</p>
             </div>
           </div>
 
           <div className="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow" id="stat-card-remnants">
             <div className="bg-rose-50 p-2.5 rounded-lg text-rose-600 border border-rose-100 shrink-0">
-              <Clock className="w-5 h-5" />
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">الفضلات والمقصوصات / Cut Remnants</p>
-              <p className="text-sm font-black text-slate-950 mt-0.5">تتبع ذكي للوزن والمقاس <span className="text-[10px] font-normal text-slate-400 font-sans">/ Live Remnants</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t.systemIntegrity}</p>
+              <p className="text-sm font-black text-slate-950 mt-0.5">{t.integrityStatus}</p>
             </div>
           </div>
         </div>
@@ -3746,13 +4974,13 @@ export default function App() {
         <aside className="w-full lg:w-80 border-r border-slate-200 bg-slate-50/50 flex flex-col p-4 shrink-0 gap-3" id="sidebar">
           <div>
             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400" id="sidebar-filter-label">
-              Workspace Filter
+              {language === "ar" ? "فلترة مساحة العمل" : "Workspace Filter"}
             </label>
             <div className="relative mt-1" id="sidebar-search-container">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search 51 sheets (e.g. CutRemnants)..."
+                placeholder={t.searchSheets}
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 shadow-sm"
@@ -3765,7 +4993,7 @@ export default function App() {
           <div id="category-filter-container">
             <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1" id="category-filter-header">
               <Filter className="w-3 h-3" />
-              <span>Category</span>
+              <span>{t.categoryLabel}</span>
             </div>
             <select
               value={selectedCategory}
@@ -3775,7 +5003,7 @@ export default function App() {
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
-                  {cat}
+                  {getCategoryLabel(cat, language)}
                 </option>
               ))}
             </select>
@@ -3786,7 +5014,7 @@ export default function App() {
             {/* Master Dashboard Selector */}
             <button
               onClick={() => setSelectedSheetId("dashboard")}
-              className={`flex items-center gap-3 text-left px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
                 selectedSheetId === "dashboard"
                   ? "bg-slate-900 border-slate-900 text-white font-semibold shadow-sm"
                   : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100/50"
@@ -3797,34 +5025,38 @@ export default function App() {
                 <LayoutDashboard className="w-4.5 h-4.5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold leading-tight">Master ERP Dashboard</p>
-                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "dashboard" ? "text-slate-300" : "text-slate-400"}`}>لوحة القيادة والتقارير العامة</p>
+                <p className="text-[11px] font-bold leading-tight">
+                  {language === "ar" ? "لوحة القيادة العامة" : "Master ERP Dashboard"}
+                </p>
+                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "dashboard" ? "text-slate-300" : "text-slate-400"}`}>
+                  {language === "ar" ? "لوحة القيادة والتقارير العامة" : "Master ERP Dashboard Analytics"}
+                </p>
               </div>
             </button>
 
             {/* Google Gmail Integration */}
             <button
               onClick={() => setSelectedSheetId("gmail")}
-              className={`flex items-center gap-3 text-left px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
+              className={`flex items-center gap-3 text-start px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
                 selectedSheetId === "gmail"
                   ? "bg-rose-900 border-rose-900 text-white font-semibold shadow-sm"
                   : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100/50"
               }`}
               id="sidebar-gmail-tab"
             >
-              <div className={`p-1.5 rounded-md ${selectedSheetId === "gmail" ? "bg-rose-800 text-rose-350" : "bg-rose-50 text-rose-500"}`}>
+              <div className={`p-1.5 rounded-md ${selectedSheetId === "gmail" ? "bg-rose-800 text-rose-300" : "bg-rose-50 text-rose-500"}`}>
                 <Bell className="w-4.5 h-4.5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold leading-tight">Google Gmail Integration</p>
-                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "gmail" ? "text-rose-200" : "text-slate-400"}`}>البريد الإلكتروني للشركة</p>
+                <p className="text-[11px] font-bold leading-tight">{language === "ar" ? "مزامنة البريد Gmail" : "Google Gmail Integration"}</p>
+                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "gmail" ? "text-rose-200" : "text-slate-400"}`}>{language === "ar" ? "البريد الإلكتروني والمراسلات" : "Company Email Communications"}</p>
               </div>
             </button>
 
             {/* Google Calendar Integration */}
             <button
               onClick={() => setSelectedSheetId("calendar")}
-              className={`flex items-center gap-3 text-left px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
+              className={`flex items-center gap-3 text-start px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
                 selectedSheetId === "calendar"
                   ? "bg-emerald-900 border-emerald-900 text-white font-semibold shadow-sm"
                   : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100/50"
@@ -3835,15 +5067,15 @@ export default function App() {
                 <Calendar className="w-4.5 h-4.5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold leading-tight">Google Calendar Integration</p>
-                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "calendar" ? "text-emerald-200" : "text-slate-400"}`}>تقويم المواعيد والاجتماعات</p>
+                <p className="text-[11px] font-bold leading-tight">{language === "ar" ? "مزامنة التقويم Calendar" : "Google Calendar Integration"}</p>
+                <p className={`text-[9px] leading-none mt-0.5 ${selectedSheetId === "calendar" ? "text-emerald-200" : "text-slate-400"}`}>{language === "ar" ? "تقويم المواعيد والاجتماعات" : "Schedules & Appointments"}</p>
               </div>
             </button>
 
             <div className="h-px bg-slate-200 my-1" />
 
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 pt-1" id="sheets-index-header">
-              Worksheets Index ({filteredSheets.length})
+              {language === "ar" ? `فهرس جداول البيانات (${filteredSheets.length})` : `Worksheets Index (${filteredSheets.length})`}
             </p>
             {filteredSheets.map((sh) => {
               const isActive = sh.id === selectedSheetId;
@@ -3851,31 +5083,33 @@ export default function App() {
                 <button
                   key={sh.id}
                   onClick={() => setSelectedSheetId(sh.id)}
-                  className={`flex flex-col text-left px-3 py-2 rounded-lg transition-all cursor-pointer ${
+                  className={`flex flex-col text-start px-3 py-2.5 rounded-lg transition-all cursor-pointer border ${
                     isActive
-                      ? "bg-slate-900 text-white font-medium shadow-sm"
-                      : "hover:bg-slate-200/60 text-slate-600"
+                      ? "bg-slate-900 border-slate-900 text-white font-semibold shadow-sm"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100/50"
                   }`}
                   id={`sheet-tab-${sh.id}`}
                 >
                   <span className="text-xs flex items-center gap-1.5 justify-between w-full">
-                    <span className="font-medium">{sh.name}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono ${
+                    <span className="font-bold truncate">{language === "ar" ? (sh.arabicName || sh.name) : sh.name}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono shrink-0 ${
                       isActive ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-500 border border-slate-200"
                     }`} id={`sheet-badge-${sh.id}`}>
-                      {sh.rows.length} rows
+                      {sh.rows.length} {language === "ar" ? "سجلات" : "rows"}
                     </span>
                   </span>
                   <span className={`text-[10px] font-sans mt-0.5 font-normal ${
                     isActive ? "text-slate-300" : "text-slate-400"
                   }`} id={`sheet-arabic-title-${sh.id}`}>
-                    {sh.arabicName}
+                    {language === "ar" ? sh.name : sh.arabicName}
                   </span>
                 </button>
               );
             })}
             {filteredSheets.length === 0 && (
-              <p className="text-xs text-slate-400 text-center py-6" id="empty-sheets-placeholder">No sheets match search criteria.</p>
+              <p className="text-xs text-slate-400 text-center py-6" id="empty-sheets-placeholder">
+                {t.noRecordsFound}
+              </p>
             )}
           </div>
         </aside>
@@ -3884,16 +5118,16 @@ export default function App() {
         <section className="flex-1 flex flex-col p-6 min-w-0 bg-[#F8FAFC] overflow-y-auto" id="data-panel">
           {selectedSheetId === "gmail" ? (
             /* --- GMAIL INTEGRATION VIEW --- */
-            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="gmail-integration-view" dir="rtl">
+            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="gmail-integration-view" dir={language === "ar" ? "rtl" : "ltr"}>
               <div className="bg-gradient-to-r from-rose-600 to-red-700 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden border border-rose-600">
                 <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div>
                     <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2.5">
                       <Bell className="w-8 h-8 text-rose-200" />
-                      مركز اتصالات البريد الإلكتروني (Gmail)
+                      {t.gmailHeading}
                     </h1>
                     <p className="text-sm text-rose-100 font-sans mt-1">
-                      إرسال الفواتير وعروض الأسعار والتواصل المباشر مع العملاء والموردين عبر Gmail
+                      {t.gmailSub}
                     </p>
                   </div>
                 </div>
@@ -3904,15 +5138,17 @@ export default function App() {
                   <div className="bg-rose-50 p-4 rounded-full text-rose-500">
                     <Bell className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-bold">تسجيل الدخول مطلوب</h3>
+                  <h3 className="text-lg font-bold">{language === "ar" ? "تسجيل الدخول مطلوب" : "Authentication Required"}</h3>
                   <p className="text-sm text-slate-500 max-w-md font-sans">
-                    يرجى تسجيل الدخول باستخدام حساب Google المعتمد للشركة لتتمكن من استعراض صندوق البريد وإرسال الرسائل المباشرة.
+                    {language === "ar"
+                      ? "يرجى تسجيل الدخول باستخدام حساب Google المعتمد للشركة لتتمكن من استعراض صندوق البريد وإرسال الرسائل المباشرة."
+                      : "Please connect your corporate Google account to review your email inbox and dispatch invoices directly."}
                   </p>
                   <button
                     onClick={handleLogin}
                     className="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md cursor-pointer text-xs"
                   >
-                    ربط حساب Google
+                    {t.signInWithGoogle}
                   </button>
                 </div>
               ) : (
@@ -3920,11 +5156,11 @@ export default function App() {
                   {/* Compose Email Form */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-5 flex flex-col gap-4">
                     <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5">
-                      إرسال رسالة بريد إلكتروني جديدة
+                      {t.sendEmailTitle}
                     </h3>
-                    <div className="space-y-3.5 text-right">
+                    <div className="space-y-3.5 text-start">
                       <div>
-                        <label className="text-xs font-bold text-slate-500 block mb-1">البريد الإلكتروني للمستلم (To)</label>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">{t.recipientEmail}</label>
                         <input
                           type="email"
                           placeholder="customer@example.com"
@@ -3934,20 +5170,20 @@ export default function App() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-500 block mb-1">الموضوع (Subject)</label>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">{t.emailSubjectLabel}</label>
                         <input
                           type="text"
-                          placeholder="عاجل: عرض سعر خامات الحديد - الدولية ستيل"
+                          placeholder={language === "ar" ? "عرض سعر خامات الحديد - الدولية ستيل" : "Stainless Steel Raw Material quotation proposal"}
                           value={emailSubject}
                           onChange={(e) => setEmailSubject(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-500 block mb-1">نص الرسالة (Body)</label>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">{t.emailBodyLabel}</label>
                         <textarea
                           rows={6}
-                          placeholder="السلام عليكم ورحمة الله وبركاته..."
+                          placeholder={language === "ar" ? "السلام عليكم ورحمة الله وبركاته..." : "Dear client, please find attached..."}
                           value={emailBody}
                           onChange={(e) => setEmailBody(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-sans"
@@ -3958,7 +5194,7 @@ export default function App() {
                         disabled={isSendingEmail}
                         className="w-full bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        {isSendingEmail ? "جاري الإرسال..." : "إرسال الآن عبر Gmail"}
+                        {isSendingEmail ? t.sendingEmailText : t.sendEmailBtn}
                       </button>
                     </div>
                   </div>
@@ -3966,23 +5202,25 @@ export default function App() {
                   {/* Inbox List */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-7 flex flex-col gap-4">
                     <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                      <h3 className="text-sm font-extrabold text-slate-900">آخر رسائل صندوق الوارد</h3>
+                      <h3 className="text-sm font-extrabold text-slate-900">
+                        {language === "ar" ? "آخر رسائل صندوق الوارد المزامنة" : "Synced Incoming Communications"}
+                      </h3>
                       <button
                         onClick={fetchEmails}
                         disabled={isLoadingEmails}
                         className="text-xs text-rose-600 hover:text-rose-800 font-bold"
                       >
-                        {isLoadingEmails ? "جاري التحديث..." : "تحديث الرسائل ↻"}
+                        {isLoadingEmails ? (language === "ar" ? "جاري التحديث..." : "Refreshing...") : t.refreshInbox}
                       </button>
                     </div>
 
                     {isLoadingEmails ? (
                       <div className="text-center py-12 text-slate-400 text-xs">
-                        جاري تحميل البريد الوارد...
+                        {language === "ar" ? "جاري تحميل البريد الوارد..." : "Loading incoming inbox..."}
                       </div>
                     ) : emails.length === 0 ? (
                       <div className="text-center py-12 text-slate-400 text-xs">
-                        لا توجد رسائل مستلمة حالياً في صندوق الوارد.
+                        {language === "ar" ? "لا توجد رسائل مستلمة حالياً في صندوق الوارد." : "Your company inbox is currently empty."}
                       </div>
                     ) : (
                       <div className="space-y-3 overflow-y-auto max-h-[450px]">
@@ -3992,12 +5230,14 @@ export default function App() {
                           const from = headers.find((h: any) => h.name.toLowerCase() === "from")?.value || "Unknown";
                           const snippet = msg.snippet || "";
                           return (
-                            <div key={msg.id} className="border-b border-slate-100 pb-3 last:border-0 text-right">
+                            <div key={msg.id} className="border-b border-slate-100 pb-3 last:border-0 text-start">
                               <div className="flex justify-between items-start mb-1 text-xs">
-                                <span className="font-bold text-slate-900">{from}</span>
-                                <span className="text-slate-400">{new Date(parseInt(msg.internalDate)).toLocaleDateString("ar-EG")}</span>
+                                <span className="font-bold text-slate-900 truncate max-w-[200px]">{from}</span>
+                                <span className="text-slate-400 font-mono">
+                                  {new Date(parseInt(msg.internalDate)).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")}
+                                </span>
                               </div>
-                              <h4 className="text-xs font-semibold text-rose-850 mb-1">{subject}</h4>
+                              <h4 className="text-xs font-semibold text-rose-800 mb-1">{subject}</h4>
                               <p className="text-[11px] text-slate-500 line-clamp-2">{snippet}</p>
                             </div>
                           );
@@ -4010,16 +5250,16 @@ export default function App() {
             </div>
           ) : selectedSheetId === "calendar" ? (
             /* --- CALENDAR INTEGRATION VIEW --- */
-            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="calendar-integration-view" dir="rtl">
+            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="calendar-integration-view" dir={language === "ar" ? "rtl" : "ltr"}>
               <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden border border-emerald-600">
                 <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div>
                     <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2.5">
                       <Calendar className="w-8 h-8 text-emerald-200" />
-                      تقويم الشركة والمواعيد (Google Calendar)
+                      {t.calendarHeading}
                     </h1>
                     <p className="text-sm text-emerald-100 font-sans mt-1">
-                      تنظيم اجتماعات العملاء، مواعيد استلام الشحنات، وجداول الصيانة والمتابعة الدورية
+                      {t.calendarSub}
                     </p>
                   </div>
                 </div>
@@ -4030,15 +5270,17 @@ export default function App() {
                   <div className="bg-emerald-50 p-4 rounded-full text-emerald-500">
                     <Calendar className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-bold">تسجيل الدخول مطلوب</h3>
+                  <h3 className="text-lg font-bold">{language === "ar" ? "تسجيل الدخول مطلوب" : "Authentication Required"}</h3>
                   <p className="text-sm text-slate-500 max-w-md font-sans">
-                    يرجى تسجيل الدخول باستخدام حساب Google المعتمد للشركة لتتمكن من جدولة المواعيد واستعراض التقويم.
+                    {language === "ar"
+                      ? "يرجى تسجيل الدخول باستخدام حساب Google المعتمد للشركة لتتمكن من جدولة المواعيد واستعراض التقويم."
+                      : "Please connect your corporate Google account to review calendar events and schedules."}
                   </p>
                   <button
                     onClick={handleLogin}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md cursor-pointer text-xs"
                   >
-                    ربط حساب Google
+                    {t.signInWithGoogle}
                   </button>
                 </div>
               ) : (
@@ -4046,14 +5288,14 @@ export default function App() {
                   {/* Schedule Event Form */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-5 flex flex-col gap-4">
                     <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5">
-                      إضافة موعد / اجتماع جديد للتقويم
+                      {t.createEventTitle}
                     </h3>
-                    <div className="space-y-3.5 text-right">
+                    <div className="space-y-3.5 text-start">
                       <div>
-                        <label className="text-xs font-bold text-slate-500 block mb-1">عنوان الموعد (Summary)</label>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">{t.eventSummary}</label>
                         <input
                           type="text"
-                          placeholder="اجتماع توريد خامات مع شركة المقاولات"
+                          placeholder={language === "ar" ? "اجتماع توريد خامات مع شركة المقاولات" : "Steel delivery shipment alignment session"}
                           value={calSummary}
                           onChange={(e) => setCalSummary(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400"
@@ -4061,49 +5303,49 @@ export default function App() {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 block mb-1">تاريخ البدء</label>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">{language === "ar" ? "تاريخ البدء" : "Start Date"}</label>
                           <input
                             type="date"
                             value={calStartDate}
                             onChange={(e) => setCalStartDate(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 font-mono"
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-slate-500 block mb-1">وقت البدء</label>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">{language === "ar" ? "وقت البدء" : "Start Time"}</label>
                           <input
                             type="time"
                             value={calStartTime}
                             onChange={(e) => setCalStartTime(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 font-mono"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 block mb-1">تاريخ الانتهاء</label>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">{language === "ar" ? "تاريخ الانتهاء" : "End Date"}</label>
                           <input
                             type="date"
                             value={calEndDate}
                             onChange={(e) => setCalEndDate(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 font-mono"
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-slate-500 block mb-1">وقت الانتهاء</label>
+                          <label className="text-xs font-bold text-slate-500 block mb-1">{language === "ar" ? "وقت الانتهاء" : "End Time"}</label>
                           <input
                             type="time"
                             value={calEndTime}
                             onChange={(e) => setCalEndTime(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 font-mono"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-500 block mb-1">الوصف (Description)</label>
+                        <label className="text-xs font-bold text-slate-500 block mb-1">{t.eventDescription}</label>
                         <textarea
                           rows={3}
-                          placeholder="تفاصيل الموعد وجدول الأعمال..."
+                          placeholder={language === "ar" ? "تفاصيل الموعد وجدول الأعمال..." : "Aligned agenda for warehouse dispatching..."}
                           value={calDescription}
                           onChange={(e) => setCalDescription(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-sans"
@@ -4114,7 +5356,7 @@ export default function App() {
                         disabled={isCreatingEvent}
                         className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        {isCreatingEvent ? "جاري الحفظ..." : "حفظ في Google Calendar"}
+                        {isCreatingEvent ? (language === "ar" ? "جاري الحفظ..." : "Scheduling...") : t.createEventBtn}
                       </button>
                     </div>
                   </div>
@@ -4122,34 +5364,34 @@ export default function App() {
                   {/* Events List */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-7 flex flex-col gap-4">
                     <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                      <h3 className="text-sm font-extrabold text-slate-900">المواعيد والاجتماعات القادمة</h3>
+                      <h3 className="text-sm font-extrabold text-slate-900">{t.upcomingEvents}</h3>
                       <button
                         onClick={fetchEvents}
                         disabled={isLoadingEvents}
                         className="text-xs text-emerald-600 hover:text-emerald-800 font-bold"
                       >
-                        {isLoadingEvents ? "جاري التحديث..." : "تحديث المواعيد ↻"}
+                        {isLoadingEmails ? (language === "ar" ? "جاري التحديث..." : "Refreshing...") : t.refreshEvents}
                       </button>
                     </div>
 
                     {isLoadingEvents ? (
                       <div className="text-center py-12 text-slate-400 text-xs">
-                        جاري تحميل التقويم...
+                        {language === "ar" ? "جاري تحميل التقويم..." : "Loading schedules..."}
                       </div>
                     ) : events.length === 0 ? (
                       <div className="text-center py-12 text-slate-400 text-xs">
-                        لا توجد مواعيد قادمة مسجلة في التقويم.
+                        {language === "ar" ? "لا توجد مواعيد قادمة مسجلة في التقويم." : "No upcoming events found on Google Calendar."}
                       </div>
                     ) : (
                       <div className="space-y-3 overflow-y-auto max-h-[450px]">
                         {events.map((event: any) => {
                           const start = event.start?.dateTime || event.start?.date || "";
-                          const formattedStart = start ? new Date(start).toLocaleString("ar-EG") : "";
+                          const formattedStart = start ? new Date(start).toLocaleString(language === "ar" ? "ar-EG" : "en-US") : "";
                           return (
-                            <div key={event.id} className="border-b border-slate-100 pb-3 last:border-0 text-right">
+                            <div key={event.id} className="border-b border-slate-100 pb-3 last:border-0 text-start">
                               <div className="flex justify-between items-start mb-1 text-xs">
                                 <span className="font-bold text-slate-900">{event.summary || "(No Title)"}</span>
-                                <span className="text-emerald-600 font-semibold">{formattedStart}</span>
+                                <span className="text-emerald-600 font-semibold font-mono">{formattedStart}</span>
                               </div>
                               {event.description && (
                                 <p className="text-[11px] text-slate-500">{event.description}</p>
@@ -4165,7 +5407,7 @@ export default function App() {
             </div>
           ) : selectedSheetId === "dashboard" ?
             /* --- MASTER EXECUTIVE DASHBOARD / لوحة التحكم والمتابعة التنفيذية الشاملة --- */
-            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="master-dashboard-view" dir="rtl">
+            <div className="flex flex-col gap-6 animate-fade-in text-slate-800" id="master-dashboard-view" dir={language === "ar" ? "rtl" : "ltr"}>
               {/* TOP BRAND HEADER & CONTROL BAR */}
               <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden border border-slate-800" id="dashboard-custom-hero">
                 <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -ml-20 -mt-20 pointer-events-none" />
@@ -4175,16 +5417,20 @@ export default function App() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="bg-emerald-500 text-slate-950 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider animate-pulse">
-                        ● نظام نشط وآمن / ACTIVE SECURE CORE
+                        {language === "ar" ? t.activeSecure : t.activeSecureEn}
                       </span>
-                      <span className="text-slate-400 font-mono text-[10px]">العملة الأساسية: الجنيه المصري (EGP)</span>
+                      <span className="text-slate-400 font-mono text-[10px]">
+                        {language === "ar" ? "العملة الأساسية: الجنيه المصري (EGP)" : "Base Currency: Egyptian Pound (EGP)"}
+                      </span>
                     </div>
-                    <h1 className="text-2xl sm:text-3.5xl font-extrabold tracking-tight flex items-center gap-2.5">
-                      <Building2 className="w-8 h-8 text-indigo-400" />
-                      الدولية ستيل لتجارة وتوريد خامات الاستانلس ستيل
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2.5">
+                      <Building2 className="w-8 h-8 text-indigo-400 font-bold" />
+                      {language === "ar" ? "الدولية ستيل لتجارة وتوريد خامات الاستانلس ستيل" : "International Steel for Stainless Steel Trading & Import"}
                     </h1>
                     <p className="text-sm text-slate-300 font-sans mt-1">
-                      نظام التشغيل المؤسسي المتكامل ولوحة القيادة التنفيذية | International Steel Co. ERP & BI Gateway
+                      {language === "ar"
+                        ? "نظام التشغيل المؤسسي المتكامل ولوحة القيادة التنفيذية | البوابة الرقمية الموحدة"
+                        : "Unified Corporate Operations Dashboard & Real-Time Business Intelligence Gateway"}
                     </p>
                   </div>
 
@@ -4195,7 +5441,7 @@ export default function App() {
                       id="dashboard-master-pdf-btn"
                     >
                       <Printer className="w-4 h-4" />
-                      طباعة التقرير الشامل / Executive Report
+                      {language === "ar" ? "طباعة التقرير التنفيذي الشامل" : "Print Executive Master Report"}
                     </button>
                     
                     <button
@@ -4204,11 +5450,177 @@ export default function App() {
                       id="dashboard-master-excel-btn"
                     >
                       <Download className="w-4 h-4 text-slate-300" />
-                      تصدير كتاب العمل الكامل / Download Workbook
+                      {language === "ar" ? "تصدير كتاب العمل الكامل (Excel)" : "Export Full Workbook (Excel)"}
                     </button>
                   </div>
                 </div>
               </div>
+
+              {/* INTERACTIVE TRADER SALES GUIDE - FIXED "HOW TO DO STUFF" PAIN POINT */}
+              {isTraderGuideOpen ? (
+                <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-2xl p-6 text-white shadow-xl flex flex-col gap-5 text-start relative overflow-hidden" id="trader-sales-guide-card" dir={language === "ar" ? "rtl" : "ltr"}>
+                  {/* Decorative background blur shapes */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                  <div className="flex justify-between items-start z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-indigo-500/20 p-2.5 rounded-xl border border-indigo-500/30 text-indigo-300">
+                        <Info className="w-5.5 h-5.5 text-indigo-300" />
+                      </div>
+                      <div>
+                        <h2 className="text-base sm:text-lg font-extrabold font-sans text-indigo-100">
+                          {language === "ar" ? "💡 دليل التاجر المساعد: كيف تقوم بتسجيل مبيعات جديدة؟" : "💡 Trader Assistant: How to Record New Sales?"}
+                        </h2>
+                        <p className="text-xs text-indigo-200 mt-1">
+                          {language === "ar" 
+                            ? "اتبع هذا الدليل التفاعلي المبسط والمؤتمت خطوة بخطوة للبدء في تحقيق الأرباح وتسجيل فواتير العملاء."
+                            : "Follow this direct step-by-step interactive manual to issue tax invoices and record sales easily."}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsTraderGuideOpen(false)}
+                      className="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-1.5 rounded-lg transition-colors cursor-pointer text-xs"
+                      title={language === "ar" ? "إخفاء الدليل" : "Dismiss Guide"}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* 4 Interactive Columns/Steps */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10" id="trader-guide-steps-grid">
+                    {/* Step 1 */}
+                    <div className="bg-slate-900/60 border border-indigo-500/20 rounded-xl p-4 flex flex-col justify-between transition-all hover:border-indigo-400/40">
+                      <div>
+                        <div className="flex justify-between items-center mb-2.5">
+                          <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-2 py-0.5 rounded">
+                            {language === "ar" ? "الخطوة 1" : "STEP 1"}
+                          </span>
+                          <span className="text-[9px] text-slate-400">{language === "ar" ? "التحقق والتحضير" : "Check & Validate"}</span>
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-100">
+                          {language === "ar" ? "1. مراجعة العميل والمخزون" : "1. Audit Client & Stock"}
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                          {language === "ar"
+                            ? "تأكد من تسجيل العميل مسبقاً وتوفر كميات كافية في مخزن الصاج والمواسير لتجنب تعارض الحسابات."
+                            : "Ensure the customer is registered and sufficient steel sheets or tubes are available in stock."}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1.5 mt-3.5 pt-3 border-t border-slate-800">
+                        <button
+                          onClick={() => setSelectedSheetId("customers")}
+                          className="w-full text-center bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center gap-1"
+                        >
+                          <span>{language === "ar" ? "👥 عرض دليل العملاء" : "👥 Customers Ledger"}</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedSheetId("items")}
+                          className="w-full text-center bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center gap-1"
+                        >
+                          <span>{language === "ar" ? "📦 فحص أرصدة المخزن" : "📦 Inventory Quantities"}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="bg-slate-900/60 border border-indigo-500/20 rounded-xl p-4 flex flex-col justify-between transition-all hover:border-indigo-400/40">
+                      <div>
+                        <div className="flex justify-between items-center mb-2.5">
+                          <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded">
+                            {language === "ar" ? "الخطوة 2" : "STEP 2"}
+                          </span>
+                          <span className="text-[9px] text-slate-400">{language === "ar" ? "التشغيل السريع" : "Quick Action"}</span>
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-100">
+                          {language === "ar" ? "2. فتح منشئ الفواتير" : "2. Launch Invoice Builder"}
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                          {language === "ar"
+                            ? "انقر على الزر الفوري بالأسفل لفتح نافذة المبيعات الذكية متعددة البنود مع رقم فاتورة تلقائي."
+                            : "Click below to activate the multi-item billing modal with automated tax invoicing sequences."}
+                        </p>
+                      </div>
+                      <div className="mt-3.5 pt-3 border-t border-slate-800">
+                        <button
+                          onClick={() => {
+                            setSelectedSheetId("salesInvoices");
+                            setIsAddingRow(true);
+                          }}
+                          className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2 px-3 rounded-lg text-[11px] cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/20 active:scale-95"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>{language === "ar" ? "+ إصدار فاتورة مبيعات" : "+ Issue Tax Invoice"}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="bg-slate-900/60 border border-indigo-500/20 rounded-xl p-4 flex flex-col justify-between transition-all hover:border-indigo-400/40">
+                      <div>
+                        <div className="flex justify-between items-center mb-2.5">
+                          <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-2 py-0.5 rounded">
+                            {language === "ar" ? "الخطوة 3" : "STEP 3"}
+                          </span>
+                          <span className="text-[9px] text-slate-400">{language === "ar" ? "تعبئة البيانات" : "Billing Data Entry"}</span>
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-100">
+                          {language === "ar" ? "3. إدخال البنود والأسعار" : "3. Quantities & Rates"}
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                          {language === "ar"
+                            ? "اختر العميل وتاريخ المعاملة. اضغط على زر \"إضافة بند\" لتسجيل المنتجات والكميات. الضريبة والخصم والسيولة تحسب تلقائياً."
+                            : "Choose client, click 'Add Item' to write dimensions, weights or quantities. Taxes & totals calculate automatically."}
+                        </p>
+                      </div>
+                      <div className="mt-3.5 pt-3 border-t border-slate-800 text-slate-500 text-[10px] text-center font-bold">
+                        {language === "ar" ? "تكامل تلقائي مع حسابات الأستاذ" : "Auto-integrated General Ledger"}
+                      </div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div className="bg-slate-900/60 border border-indigo-500/20 rounded-xl p-4 flex flex-col justify-between transition-all hover:border-indigo-400/40">
+                      <div>
+                        <div className="flex justify-between items-center mb-2.5">
+                          <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-2 py-0.5 rounded">
+                            {language === "ar" ? "الخطوة 4" : "STEP 4"}
+                          </span>
+                          <span className="text-[9px] text-slate-400">{language === "ar" ? "الترحيل والطباعة" : "Post & Print"}</span>
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-100">
+                          {language === "ar" ? "4. ترحيل السجل والطباعة" : "4. Save & Print Invoice"}
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                          {language === "ar"
+                            ? "اضغط على حفظ الفاتورة ليتم ترحيل البيانات فورياً. توجه إلى قائمة الفواتير ثم اضغط على أيقونة العين 👁️ لطباعة الفاتورة الضريبية للعميل."
+                            : "Commit the sheet, then locate the entry in sales. Press the Eye 👁️ button to generate a clean PDF tax invoice."}
+                        </p>
+                      </div>
+                      <div className="mt-3.5 pt-3 border-t border-slate-800">
+                        <button
+                          onClick={() => setSelectedSheetId("salesInvoices")}
+                          className="w-full text-center bg-slate-800 hover:bg-slate-750 text-slate-200 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all border border-slate-700 flex items-center justify-center gap-1"
+                        >
+                          <span>{language === "ar" ? "👁️ استعراض الفواتير المسجلة" : "👁️ View Saved Invoices"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-indigo-950/40 border border-indigo-500/20 rounded-xl p-3 flex justify-between items-center flex-row-reverse text-white shadow-sm" id="trader-sales-guide-collapsed">
+                  <button
+                    onClick={() => setIsTraderGuideOpen(true)}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-1.5 rounded-lg text-[11px] cursor-pointer transition-all flex items-center gap-1.5"
+                  >
+                    <span>{language === "ar" ? "💡 إظهار دليل التاجر المساعد" : "💡 Show Trader Helper Guide"}</span>
+                  </button>
+                  <p className="text-xs text-indigo-200 font-sans">
+                    {language === "ar" ? "هل تريد معرفة كيفية إصدار فواتير ومبيعات جديدة؟" : "Want to learn how to instantly issue invoices and log sales?"}
+                  </p>
+                </div>
+              )}
 
               {/* DATE & TIME FILTER ROW */}
               <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4" id="dashboard-filter-bar">
@@ -4217,7 +5629,9 @@ export default function App() {
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 font-sans">تاريخ المتابعة:</span>
+                    <span className="text-xs font-bold text-slate-500 font-sans">
+                      {language === "ar" ? "تاريخ المتابعة:" : "Follow-up Date:"}
+                    </span>
                     <select
                       value={dashboardDate}
                       onChange={(e) => setDashboardDate(e.target.value)}
@@ -4225,7 +5639,7 @@ export default function App() {
                       id="dashboard-date-select"
                     >
                       <option value="25-05-2024">25-05-2024</option>
-                      <option value="28-06-2026">28-06-2026 (اليوم)</option>
+                      <option value="28-06-2026">{language === "ar" ? "28-06-2026 (اليوم)" : "28-06-2026 (Today)"}</option>
                     </select>
                   </div>
                 </div>
@@ -4239,7 +5653,7 @@ export default function App() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
-                    اليوم
+                    {language === "ar" ? "اليوم" : "Today"}
                   </button>
                   <button
                     onClick={() => setDashboardTimeFilter("week")}
@@ -4249,7 +5663,7 @@ export default function App() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
-                    هذا الأسبوع
+                    {language === "ar" ? "هذا الأسبوع" : "This Week"}
                   </button>
                   <button
                     onClick={() => setDashboardTimeFilter("month")}
@@ -4259,7 +5673,7 @@ export default function App() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
-                    هذا الشهر
+                    {language === "ar" ? "هذا الشهر" : "This Month"}
                   </button>
                   <button
                     onClick={() => setDashboardTimeFilter("all")}
@@ -4269,17 +5683,17 @@ export default function App() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
-                    الكل
+                    {language === "ar" ? "الكل" : "All"}
                   </button>
 
                   <div className="w-px h-5 bg-slate-200 mx-1.5" />
 
                   <button
-                    onClick={() => showAlert("تخصيص الشاشة", "يمكنك إعادة ترتيب لوحات القيادة وتخصيص تنبيهات المتابعة الذكية من لوحة إعدادات المدير.")}
+                    onClick={() => showAlert(language === "ar" ? "تخصيص الشاشة" : "Customize Screen", language === "ar" ? "يمكنك إعادة ترتيب لوحات القيادة وتخصيص تنبيهات المتابعة الذكية من لوحة إعدادات المدير." : "Arrange your layout and configure custom smart reports from the administrator panel.")}
                     className="flex items-center gap-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
                   >
                     <Settings className="w-3.5 h-3.5" />
-                    <span>تخصيص الشاشة</span>
+                    <span>{language === "ar" ? "تخصيص الشاشة" : "Customize UI"}</span>
                   </button>
                 </div>
               </div>
@@ -4292,19 +5706,23 @@ export default function App() {
                   className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 shadow-2xs flex flex-col justify-between cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500">إجمالي السيولة</span>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {language === "ar" ? "إجمالي السيولة" : "Total Cash Balance"}
+                    </span>
                     <span className="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-bold">12.5% ▲</span>
                   </div>
                   <div className="mt-2.5">
                     <p className="text-lg font-extrabold text-slate-900 font-sans tracking-tight">1,285,000</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">جنيه مصري</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{language === "ar" ? "جنيه مصري" : "EGP"}</p>
                   </div>
                   <div className="mt-3 h-6 w-full opacity-80">
                     <svg viewBox="0 0 100 30" className="w-full h-full text-emerald-500" preserveAspectRatio="none">
                       <path d="M0,25 C15,22 30,28 45,15 C60,2 75,10 100,5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">عن أمس ● الخزائن والبنوك</p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {language === "ar" ? "عن أمس ● الخزائن والبنوك" : "vs yesterday ● Cash & Banks"}
+                  </p>
                 </div>
 
                 {/* 2. إجمالي المخزون */}
@@ -4313,19 +5731,25 @@ export default function App() {
                   className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 shadow-2xs flex flex-col justify-between cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500">إجمالي المخزون</span>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {language === "ar" ? "إجمالي المخزون" : "Total Stock Level"}
+                    </span>
                     <span className="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-bold">5.8% ▲</span>
                   </div>
                   <div className="mt-2.5">
                     <p className="text-lg font-extrabold text-slate-900 font-sans tracking-tight">8,420</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">طن من الألواح والمواسير</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {language === "ar" ? "طن من الألواح والمواسير" : "Tons of sheets & pipes"}
+                    </p>
                   </div>
                   <div className="mt-3 h-6 w-full opacity-80">
                     <svg viewBox="0 0 100 30" className="w-full h-full text-emerald-500" preserveAspectRatio="none">
                       <path d="M0,28 C15,26 30,22 45,18 C60,10 75,5 100,2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">عن أمس ● 5 مستودعات رئيسية</p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {language === "ar" ? "عن أمس ● 5 مستودعات رئيسية" : "vs yesterday ● 5 Core Warehouses"}
+                  </p>
                 </div>
 
                 {/* 3. إجمالي المبيعات */}
@@ -4334,19 +5758,23 @@ export default function App() {
                   className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 shadow-2xs flex flex-col justify-between cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500">إجمالي المبيعات</span>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {language === "ar" ? "إجمالي المبيعات" : "Invoiced Revenue YTD"}
+                    </span>
                     <span className="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-bold">18.3% ▲</span>
                   </div>
                   <div className="mt-2.5">
                     <p className="text-lg font-extrabold text-slate-900 font-sans tracking-tight">3,850,000</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">جنيه مبيعات مفوترة</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{language === "ar" ? "جنيه مبيعات مفوترة" : "EGP Total Sales"}</p>
                   </div>
                   <div className="mt-3 h-6 w-full opacity-80">
                     <svg viewBox="0 0 100 30" className="w-full h-full text-emerald-500" preserveAspectRatio="none">
                       <path d="M0,25 C15,20 30,22 45,12 C60,2 75,8 100,1" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">عن أمس ● نشاط البيع والتعاقد</p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {language === "ar" ? "عن أمس ● نشاط البيع والتعاقد" : "vs yesterday ● Commercial Deals"}
+                  </p>
                 </div>
 
                 {/* 4. إجمالي المشتريات */}
@@ -4355,19 +5783,23 @@ export default function App() {
                   className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 shadow-2xs flex flex-col justify-between cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500">إجمالي المشتريات</span>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {language === "ar" ? "إجمالي المشتريات" : "Purchases volume"}
+                    </span>
                     <span className="bg-rose-50 text-rose-700 text-[10px] px-1.5 py-0.5 rounded font-bold">4.2% ▼</span>
                   </div>
                   <div className="mt-2.5">
                     <p className="text-lg font-extrabold text-slate-900 font-sans tracking-tight">2,910,000</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">جنيه توريدات مستلمة</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{language === "ar" ? "جنيه توريدات مستلمة" : "EGP Supplies Received"}</p>
                   </div>
                   <div className="mt-3 h-6 w-full opacity-80">
                     <svg viewBox="0 0 100 30" className="w-full h-full text-rose-500" preserveAspectRatio="none">
                       <path d="M0,5 C15,10 30,8 45,18 C60,20 75,25 100,28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">عن أمس ● فواتير شراء معتمدة</p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {language === "ar" ? "عن أمس ● فواتير شراء معتمدة" : "vs yesterday ● Approved PO Invoices"}
+                  </p>
                 </div>
 
                 {/* 5. صافي التحصيل */}
@@ -4376,19 +5808,23 @@ export default function App() {
                   className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 shadow-2xs flex flex-col justify-between cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500">صافي التحصيل</span>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {language === "ar" ? "صافي التحصيل" : "Net Collection Cash"}
+                    </span>
                     <span className="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-bold">15.7% ▲</span>
                   </div>
                   <div className="mt-2.5">
                     <p className="text-lg font-extrabold text-slate-900 font-sans tracking-tight">2,950,000</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">جنيه نقدي وشيكات</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{language === "ar" ? "جنيه نقدي وشيكات" : "EGP Cash & Cleared Checks"}</p>
                   </div>
                   <div className="mt-3 h-6 w-full opacity-80">
                     <svg viewBox="0 0 100 30" className="w-full h-full text-emerald-500" preserveAspectRatio="none">
                       <path d="M0,26 C20,24 40,15 60,12 C80,10 90,5 100,2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">عن أمس ● كفاءة دورة التحصيل</p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {language === "ar" ? "عن أمس ● كفاءة دورة التحصيل" : "vs yesterday ● Collection Efficiency"}
+                  </p>
                 </div>
 
                 {/* 6. العملاء */}
@@ -4397,19 +5833,27 @@ export default function App() {
                   className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 shadow-2xs flex flex-col justify-between cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500">العملاء</span>
-                    <span className="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-bold">+3 جدد</span>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {language === "ar" ? "العملاء" : "Registered Clients"}
+                    </span>
+                    <span className="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-bold">
+                      {language === "ar" ? "+3 جدد" : "+3 New"}
+                    </span>
                   </div>
                   <div className="mt-2.5">
                     <p className="text-lg font-extrabold text-slate-900 font-sans tracking-tight">148</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">عميل مسجل في الدفاتر</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {language === "ar" ? "عميل مسجل في الدفاتر" : "Active corporate clients"}
+                    </p>
                   </div>
                   <div className="mt-3 h-6 w-full opacity-80">
                     <svg viewBox="0 0 100 30" className="w-full h-full text-emerald-500" preserveAspectRatio="none">
                       <path d="M0,20 L20,18 L40,12 L60,15 L80,5 L100,2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">عميل نشط تجارياً</p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {language === "ar" ? "عميل نشط تجارياً" : "Trading status active"}
+                  </p>
                 </div>
 
                 {/* 7. الشيكات */}
@@ -4418,19 +5862,27 @@ export default function App() {
                   className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 shadow-2xs flex flex-col justify-between cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500">الشيكات</span>
-                    <span className="bg-rose-50 text-rose-700 text-[10px] px-1.5 py-0.5 rounded font-bold">-2 شيك</span>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {language === "ar" ? "الشيكات" : "Bank Cheques"}
+                    </span>
+                    <span className="bg-rose-50 text-rose-700 text-[10px] px-1.5 py-0.5 rounded font-bold">
+                      {language === "ar" ? "-2 شيك" : "-2 Cheques"}
+                    </span>
                   </div>
                   <div className="mt-2.5">
                     <p className="text-lg font-extrabold text-slate-900 font-sans tracking-tight">37</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">شيك تحت التحصيل/الدفع</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {language === "ar" ? "شيك تحت التحصيل/الدفع" : "Cheques in clearance pool"}
+                    </p>
                   </div>
                   <div className="mt-3 h-6 w-full opacity-80">
                     <svg viewBox="0 0 100 30" className="w-full h-full text-rose-500" preserveAspectRatio="none">
                       <path d="M0,10 L25,12 L50,18 L75,22 L100,26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">شيك معلق الصرف</p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {language === "ar" ? "شيك معلق الصرف" : "Pending collection status"}
+                  </p>
                 </div>
               </div>
 
@@ -4441,7 +5893,7 @@ export default function App() {
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-rose-600 animate-pulse" />
-                      مؤشرات تحتاج قرار عاجل
+                      {language === "ar" ? "مؤشرات تحتاج قرار عاجل" : "Urgent Decision Alerts"}
                     </h3>
                     <div className="space-y-3.5 mt-3.5 text-xs">
                       <div
@@ -4450,9 +5902,13 @@ export default function App() {
                       >
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
-                          <span className="font-bold text-slate-800">شيك مستحق الصرف غداً</span>
+                          <span className="font-bold text-slate-800">
+                            {language === "ar" ? "شيك مستحق الصرف غداً" : "Check Clears Tomorrow"}
+                          </span>
                         </div>
-                        <span className="text-[11px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded">عدد 3 شيكات</span>
+                        <span className="text-[11px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded">
+                          {language === "ar" ? "عدد 3 شيكات" : "3 Drafts"}
+                        </span>
                       </div>
 
                       <div
@@ -4461,7 +5917,9 @@ export default function App() {
                       >
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-amber-500" />
-                          <span className="font-semibold text-slate-700">خامة حديد ستنفد خلال 5 أيام</span>
+                          <span className="font-semibold text-slate-700">
+                            {language === "ar" ? "خامة حديد ستنفد خلال 5 أيام" : "Grade out of stock in 5 days"}
+                          </span>
                         </div>
                         <span className="text-[11px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded font-mono">304 Sheet 2mm</span>
                       </div>
@@ -4472,9 +5930,13 @@ export default function App() {
                       >
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-rose-600" />
-                          <span className="font-bold text-slate-800">عميل تجاوز حد الائتمان</span>
+                          <span className="font-bold text-slate-800">
+                            {language === "ar" ? "عميل تجاوز حد الائتمان" : "Client Over Credit Limit"}
+                          </span>
                         </div>
-                        <span className="text-[11px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded">شركة النور للإنشاءات</span>
+                        <span className="text-[11px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded">
+                          {language === "ar" ? "شركة النور للإنشاءات" : "Al-Noor Construction"}
+                        </span>
                       </div>
 
                       <div
@@ -4483,9 +5945,13 @@ export default function App() {
                       >
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-amber-500" />
-                          <span className="font-semibold text-slate-700">أمر شراء ينتظر اعتماد الإدارة</span>
+                          <span className="font-semibold text-slate-700">
+                            {language === "ar" ? "أمر شراء ينتظر اعتماد الإدارة" : "Purchase order awaits authorization"}
+                          </span>
                         </div>
-                        <span className="text-[11px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">عدد 1 معلق</span>
+                        <span className="text-[11px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">
+                          {language === "ar" ? "عدد 1 معلق" : "1 Pending"}
+                        </span>
                       </div>
 
                       <div
@@ -4493,163 +5959,181 @@ export default function App() {
                         className="flex justify-between items-center bg-slate-50 hover:bg-amber-50/50 p-2 rounded-lg border border-slate-100 hover:border-amber-100 transition-all cursor-pointer"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-amber-500" />
-                          <span className="font-semibold text-slate-700">كونتينر استيراد بالميناء منذ 3 أيام</span>
+                          <span className="w-2 h-2 rounded-full bg-slate-400" />
+                          <span className="font-semibold text-slate-700">
+                            {language === "ar" ? "سجل النشاطات والأحداث الأخيرة" : "Recent system activity logs"}
+                          </span>
                         </div>
-                        <span className="text-[11px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded font-mono">TEMU8456221</span>
+                        <span className="text-[11px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded">
+                          {language === "ar" ? "عرض الكل" : "View All"}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <button
-                    onClick={() => { setSelectedSheetId("logs"); showAlert("التنبيهات الإدارية", "تم مراجعة 5 تنبيهات حرجة، كافة النظم اللوجستية والمالية متوافقة مع متطلبات الرقابة الموحدة."); }}
-                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold py-2 px-3 rounded-lg border border-slate-200 text-center cursor-pointer transition-colors"
+                    onClick={() => setSelectedSheetId("logs")}
+                    className="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold py-2 px-3 rounded-lg border border-rose-100 text-center cursor-pointer transition-colors mt-2"
                   >
-                    عرض جميع التنبيهات والطلبات
+                    {language === "ar" ? "معالجة التنبيهات العاجلة" : "Process Urgent Alerts"}
                   </button>
                 </div>
 
-                {/* Panel 2: حركة الأموال - السيولة */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between">
-                  <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-indigo-600" />
-                    حركة وتوزيع الأموال (السيولة)
-                  </h3>
+                {/* Panel 2: حركة وتوزيع الأموال (السيولة) */}
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-emerald-600" />
+                      {language === "ar" ? "حركة وتوزيع الأموال (السيولة)" : "Liquidity Distribution"}
+                    </h3>
+                    
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-bold text-slate-700">
+                            {language === "ar" ? "أرصدة البنوك والنقدية" : "Bank Balances & Cash"}
+                          </span>
+                          <span className="font-mono font-bold text-slate-900">
+                            {language === "ar" ? "1,450,000 ج.م (75%)" : "1,450,000 EGP (75%)"}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                          <div className="bg-emerald-500 h-full rounded-full" style={{ width: "75%" }} />
+                        </div>
+                      </div>
 
-                  <div className="relative flex items-center justify-center my-4 h-36">
-                    {/* Concentric SVG Donut Chart representing 35%, 55%, 10% */}
-                    <svg width="130" height="130" viewBox="0 0 42 42" className="transform -rotate-90">
-                      {/* Gray track */}
-                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#E2E8F0" strokeWidth="4.5" />
-                      {/* Banks (55%) - Indigo */}
-                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#4F46E5" strokeWidth="4.5" strokeDasharray="55 45" strokeDashoffset="0" />
-                      {/* Cash Safe (35%) - Emerald */}
-                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#10B981" strokeWidth="4.5" strokeDasharray="35 65" strokeDashoffset="-55" />
-                      {/* Wallets (10%) - Amber */}
-                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#F59E0B" strokeWidth="4.5" strokeDasharray="10 90" strokeDashoffset="-90" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-xs font-extrabold text-slate-800">1,285,000</span>
-                      <span className="text-[9px] text-slate-400 font-bold">جنيه مصري</span>
+                      <div>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-bold text-slate-700">
+                            {language === "ar" ? "شيكات تحت التحصيل" : "Checks Under Collection"}
+                          </span>
+                          <span className="font-mono font-bold text-slate-900">
+                            {language === "ar" ? "350,000 ج.م (18%)" : "350,000 EGP (18%)"}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                          <div className="bg-amber-500 h-full rounded-full" style={{ width: "18%" }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-bold text-slate-700">
+                            {language === "ar" ? "العهدة النقدية والخزينة" : "Petty Cash & Safe"}
+                          </span>
+                          <span className="font-mono font-bold text-slate-900">
+                            {language === "ar" ? "120,000 ج.م (7%)" : "120,000 EGP (7%)"}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                          <div className="bg-indigo-500 h-full rounded-full" style={{ width: "7%" }} />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-sans pt-2 border-t border-slate-100">
-                    <div className="flex flex-col items-center bg-emerald-50 rounded p-1.5 border border-emerald-100">
-                      <span className="font-extrabold text-emerald-700">الخزائن (35%)</span>
-                      <span className="font-mono font-bold text-slate-700 mt-0.5">449,750 ج.م</span>
-                    </div>
-                    <div className="flex flex-col items-center bg-indigo-50 rounded p-1.5 border border-indigo-100">
-                      <span className="font-extrabold text-indigo-700">البنوك (55%)</span>
-                      <span className="font-mono font-bold text-slate-700 mt-0.5">706,750 ج.م</span>
-                    </div>
-                    <div className="flex flex-col items-center bg-amber-50 rounded p-1.5 border border-amber-100">
-                      <span className="font-extrabold text-amber-700">المحافظ (10%)</span>
-                      <span className="font-mono font-bold text-slate-700 mt-0.5">128,500 ج.م</span>
-                    </div>
+                  <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-500 mt-2">
+                    <span>
+                      {language === "ar" ? "إجمالي السيولة المتاحة:" : "Total Liquidity Available:"}
+                    </span>
+                    <span className="font-mono font-extrabold text-slate-800 text-xs">
+                      {language === "ar" ? "1,920,000 ج.م" : "1,920,000 EGP"}
+                    </span>
                   </div>
                 </div>
 
                 {/* Panel 3: أفضل العملاء مبيعات */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between gap-4">
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-emerald-600" />
-                      أفضل العملاء من حيث المبيعات
+                      <Users className="w-4 h-4 text-indigo-600" />
+                      {language === "ar" ? "أفضل العملاء مبيعات ونشاطاً" : "Top Clients by Revenue"}
                     </h3>
-                    <div className="mt-3 overflow-hidden rounded-xl border border-slate-100">
-                      <table className="w-full text-right text-xs">
-                        <thead className="bg-slate-50 text-slate-500 text-[11px]">
-                          <tr>
-                            <th className="py-2 px-3">العميل</th>
-                            <th className="py-2 px-3 text-left">قيمة المبيعات</th>
-                            <th className="py-2 px-3 text-center">النسبة</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-700">
-                          <tr className="hover:bg-slate-50 transition-colors">
-                            <td className="py-2 px-3 font-bold text-slate-900">شركة النور للإنشاءات</td>
-                            <td className="py-2 px-3 text-left font-mono font-semibold text-emerald-700">620,000 ج.م</td>
-                            <td className="py-2 px-3 text-center text-slate-400">16.1%</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors">
-                            <td className="py-2 px-3 font-semibold">مصنع القاهرة للحديد والصلب</td>
-                            <td className="py-2 px-3 text-left font-mono text-slate-700">480,000 ج.م</td>
-                            <td className="py-2 px-3 text-center text-slate-400">12.5%</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors">
-                            <td className="py-2 px-3 font-semibold">الشركة المتحدة للتجارة والتوريد</td>
-                            <td className="py-2 px-3 text-left font-mono text-slate-700">410,000 ج.م</td>
-                            <td className="py-2 px-3 text-center text-slate-400">10.6%</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors">
-                            <td className="py-2 px-3 font-semibold">شركة المدينة للمقاولات العامة</td>
-                            <td className="py-2 px-3 text-left font-mono text-slate-700">365,000 ج.م</td>
-                            <td className="py-2 px-3 text-center text-slate-400">9.5%</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors">
-                            <td className="py-2 px-3 font-semibold">مجموعة المحمدي للتجارة</td>
-                            <td className="py-2 px-3 text-left font-mono text-slate-700">340,000 ج.م</td>
-                            <td className="py-2 px-3 text-center text-slate-400">8.8%</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    <div className="mt-3.5 space-y-3 text-xs">
+                      <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <span className="font-bold text-slate-800">
+                          {language === "ar" ? "شركة الأمين للحديد" : "Al-Ameen Steel Co."}
+                        </span>
+                        <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                          {language === "ar" ? "2.4 مليون ج.م" : "2.4M EGP"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <span className="font-semibold text-slate-700">
+                          {language === "ar" ? "شركة النصر للمقاولات" : "El-Nasr Trading"}
+                        </span>
+                        <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                          {language === "ar" ? "1.8 مليون ج.م" : "1.8M EGP"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <span className="font-semibold text-slate-700">
+                          {language === "ar" ? "مجموعة الهدى للإعمار" : "Al-Huda Build Group"}
+                        </span>
+                        <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                          {language === "ar" ? "1.2 مليون ج.م" : "1.2M EGP"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="pt-2.5 mt-2 border-t border-slate-150 flex justify-between items-center text-[11px]">
-                    <span className="font-extrabold text-slate-900">إجمالي مبيعات القمة:</span>
-                    <span className="font-mono font-extrabold text-emerald-800">2,215,000 ج.م</span>
-                  </div>
+                  <button
+                    onClick={() => setSelectedSheetId("customers")}
+                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold py-2 px-3 rounded-lg border border-slate-200 text-center cursor-pointer transition-colors mt-2"
+                  >
+                    {language === "ar" ? "عرض جميع الحسابات والعملاء" : "View All Client Accounts"}
+                  </button>
                 </div>
 
                 {/* Panel 4: أفضل الأصناف مبيعاً */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between gap-4">
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
-                      <Boxes className="w-4 h-4 text-indigo-600" />
-                      الأصناف الأكثر طلباً ومبيعاً (كمية)
+                      <BarChart2 className="w-4 h-4 text-indigo-600" />
+                      {language === "ar" ? "أفضل الأصناف مبيعاً والطلب" : "Best Selling Steel Grades"}
                     </h3>
-                    <div className="mt-3 overflow-hidden rounded-xl border border-slate-100">
-                      <table className="w-full text-right text-xs">
-                        <thead className="bg-slate-50 text-slate-500 text-[11px]">
-                          <tr>
-                            <th className="py-2 px-3">صنف الحديد / الأبعاد</th>
-                            <th className="py-2 px-3 text-center">الكمية (طن)</th>
-                            <th className="py-2 px-3 text-left">إجمالي القيمة</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
-                          <tr className="hover:bg-slate-50 transition-colors text-right">
-                            <td className="py-2 px-3 font-sans font-bold text-slate-900 text-right">304 Sheet 2mm</td>
-                            <td className="py-2 px-3 text-center text-indigo-600 font-bold">612</td>
-                            <td className="py-2 px-3 text-left font-semibold text-slate-700">1,285,000 ج.م</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors text-right">
-                            <td className="py-2 px-3 font-sans text-slate-700 text-right">304 Sheet 3mm</td>
-                            <td className="py-2 px-3 text-center">485</td>
-                            <td className="py-2 px-3 text-left text-slate-600">1,120,000 ج.م</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors text-right">
-                            <td className="py-2 px-3 font-sans text-slate-700 text-right">316 Sheet 2mm</td>
-                            <td className="py-2 px-3 text-center">223</td>
-                            <td className="py-2 px-3 text-left text-slate-600">680,000 ج.م</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors text-right">
-                            <td className="py-2 px-3 font-sans text-slate-700 text-right">Pipe 2" 304</td>
-                            <td className="py-2 px-3 text-center">198</td>
-                            <td className="py-2 px-3 text-left text-slate-600">425,000 ج.م</td>
-                          </tr>
-                          <tr className="hover:bg-slate-50 transition-colors text-right">
-                            <td className="py-2 px-3 font-sans text-slate-700 text-right">Tube 40x40 304</td>
-                            <td className="py-2 px-3 text-center">168</td>
-                            <td className="py-2 px-3 text-left text-slate-600">340,000 ج.م</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    <div className="mt-3.5">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="text-slate-400 border-b border-slate-100 text-right">
+                              <th className="pb-2 font-bold text-right">{language === "ar" ? "الصنف" : "Grade"}</th>
+                              <th className="pb-2 text-center font-bold">{language === "ar" ? "الكمية" : "Qty"}</th>
+                              <th className="pb-2 text-left font-bold">{language === "ar" ? "المبيعات" : "Revenue"}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50 font-mono">
+                            <tr className="hover:bg-slate-50 transition-colors text-right">
+                              <td className="py-2 px-1 font-sans text-slate-700 text-right">304 Sheet 2mm</td>
+                              <td className="py-2 px-1 text-center font-bold">620 t</td>
+                              <td className="py-2 px-1 text-left text-indigo-600 font-bold">
+                                {language === "ar" ? "680k ج.م" : "680k EGP"}
+                              </td>
+                            </tr>
+                            <tr className="hover:bg-slate-50 transition-colors text-right">
+                              <td className="py-2 px-1 font-sans text-slate-700 text-right">Pipe 2" 304</td>
+                              <td className="py-2 px-1 text-center">198 t</td>
+                              <td className="py-2 px-1 text-left text-slate-600">
+                                {language === "ar" ? "425k ج.م" : "425k EGP"}
+                              </td>
+                            </tr>
+                            <tr className="hover:bg-slate-50 transition-colors text-right">
+                              <td className="py-2 px-1 font-sans text-slate-700 text-right">Tube 40x40 304</td>
+                              <td className="py-2 px-1 text-center">168 t</td>
+                              <td className="py-2 px-1 text-left text-slate-600">
+                                {language === "ar" ? "340k ج.م" : "340k EGP"}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
-                  <div className="pt-2.5 mt-2 border-t border-slate-150 flex justify-between items-center text-[11px]">
-                    <span className="font-sans font-extrabold text-slate-900">مجموع الكمية المباعة:</span>
-                    <span className="font-extrabold text-indigo-700">1,686 طن</span>
+                  <div className="pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px] mt-2">
+                    <span className="font-sans font-extrabold text-slate-900">
+                      {language === "ar" ? "مجموع المبيعات:" : "Total Sold:"}
+                    </span>
+                    <span className="font-extrabold text-indigo-700">
+                      {language === "ar" ? "1,686 طن" : "1,686 Tons"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -4972,169 +6456,222 @@ export default function App() {
 
               {/* SECTION 5: LOWER BRAND QUICK ACTIONS */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm" id="dashboard-quick-actions">
-                <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-200 pb-3 mb-4">
-                  إجراءات سريعة ومختصرات العمل المباشر / Quick Action Operations
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-10 gap-3">
-                  {/* Action 1: فاتورة بيع */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("salesInvoices");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-emerald-100 text-emerald-700 p-2 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                      <Plus className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-bold font-sans">فاتورة بيع</span>
-                  </button>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-3 mb-4 gap-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900">
+                      لوحة الإجراءات السريعة الشاملة للاختبار / Comprehensive Action Console for Testing
+                    </h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">يمكنك إضافة سجل أو فاتورة أو حركة تجريبية لأي جدول في النظام فورياً للتحقق من تكامل العمليات.</p>
+                  </div>
+                  <div className="flex gap-1.5 bg-slate-200/60 p-1 rounded-lg text-[10px] font-bold">
+                    <span className="px-2 py-1 bg-white rounded shadow-2xs text-indigo-950">إجمالي الجداول المدعومة: ٢٤ جدول</span>
+                  </div>
+                </div>
 
-                  {/* Action 2: فاتورة شراء */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("purchaseInvoices");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-indigo-100 text-indigo-700 p-2 rounded-lg group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                      <Plus className="w-5 h-5" />
+                <div className="space-y-5" dir="rtl">
+                  {/* Category 1: المبيعات والمشتريات (Invoices & Orders) */}
+                  <div>
+                    <h4 className="text-[11px] font-bold text-indigo-900 border-r-2 border-indigo-600 pr-2 mb-2.5 text-right">
+                      📑 الفواتير والدورة التجارية (Invoicing & Documents)
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                      <button
+                        onClick={() => { setSelectedSheetId("salesInvoices"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">فاتورة مبيعات</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("purchaseInvoices"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">فاتورة مشتريات</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("salesOrders"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">أمر بيع</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("purchaseOrders"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">أمر شراء (PO)</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("salesQuotations"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="text-[10px] font-extrabold">عرض سعر</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("purchaseRequests"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                        <span className="text-[10px] font-extrabold">طلب شراء داخلي</span>
+                      </button>
                     </div>
-                    <span className="text-xs font-bold font-sans">فاتورة شراء</span>
-                  </button>
+                  </div>
 
-                  {/* Action 3: تحصيل نقدي */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("receipts");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-emerald-100 text-emerald-700 p-2 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                      <DollarSign className="w-5 h-5" />
+                  {/* Category 2: النقدية والخزائن والبنوك (Finance & Treasury) */}
+                  <div>
+                    <h4 className="text-[11px] font-bold text-amber-950 border-r-2 border-amber-600 pr-2 mb-2.5 text-right">
+                      💰 الحسابات والمالية والتحصيل (Finance & Cash Flows)
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                      <button
+                        onClick={() => { setSelectedSheetId("receipts"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">تحصيل نقدي</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("payments"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-rose-500 hover:bg-rose-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <DollarSign className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">صرف نقدي</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("checks"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-amber-500 hover:bg-amber-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">شيك جديد</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("cashAccounts"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">خزينة جديدة</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("banks"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                        <span className="text-[10px] font-extrabold">حساب بنكي جديد</span>
+                      </button>
                     </div>
-                    <span className="text-xs font-bold font-sans">تحصيل نقدي</span>
-                  </button>
+                  </div>
 
-                  {/* Action 4: صرف نقدي */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("payments");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-rose-500 hover:bg-rose-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-rose-100 text-rose-700 p-2 rounded-lg group-hover:bg-rose-500 group-hover:text-white transition-all">
-                      <DollarSign className="w-5 h-5" />
+                  {/* Category 3: المخازن والتصنيع (Inventory, Warehouses & Cutting) */}
+                  <div>
+                    <h4 className="text-[11px] font-bold text-slate-900 border-r-2 border-slate-600 pr-2 mb-2.5 text-right">
+                      📦 إدارة المخازن وبواقي القص (Inventory & Cutting Operations)
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                      <button
+                        onClick={() => { setSelectedSheetId("items"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">إضافة صنف حديد</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("itemPrices"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                        <span className="text-[10px] font-extrabold">تسعير صنف</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("warehouses"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">مستودع جديد</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("stockTransfers"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span className="text-[10px] font-extrabold">تحويل مخزني</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("inventoryAdjustments"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span className="text-[10px] font-extrabold">جرد مخزن</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("cutRemnants"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 py-2 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Factory className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">أمر تصنيع</span>
+                      </button>
                     </div>
-                    <span className="text-xs font-bold font-sans">صرف نقدي</span>
-                  </button>
+                  </div>
 
-                  {/* Action 5: شيك جديد */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("checks");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-amber-500 hover:bg-amber-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-amber-100 text-amber-700 p-2 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition-all">
-                      <FileText className="w-5 h-5" />
+                  {/* Category 4: شركاء العمل والموظفين والتهيئة (Contacts, HR & System Configuration) */}
+                  <div>
+                    <h4 className="text-[11px] font-bold text-rose-950 border-r-2 border-rose-600 pr-2 mb-2.5 text-right">
+                      👥 شركاء العمل والموظفين والتهيئة (Partners, Employees & System Configuration)
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2.5">
+                      <button
+                        onClick={() => { setSelectedSheetId("customers"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 py-2 px-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Users className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">عميل جديد</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("suppliers"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 py-2 px-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">مورد جديد</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("salesPersons"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-amber-500 hover:bg-amber-50 text-slate-800 py-2 px-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <span className="text-[10px] font-extrabold">مندوب مبيعات</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("employees"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">موظف جديد</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("departments"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">قسم إداري جديد</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("users"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">مستخدم للنظام</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedSheetId("roles"); setRowForm({}); setIsAddingRow(true); setEditingRowIndex(null); }}
+                        className="bg-white border border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-800 py-2 px-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer text-right w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <span className="text-[10px] font-extrabold">صلاحية/دور</span>
+                      </button>
                     </div>
-                    <span className="text-xs font-bold font-sans">شيك جديد</span>
-                  </button>
-
-                  {/* Action 6: أمر شراء */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("purchaseOrders");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-indigo-100 text-indigo-700 p-2 rounded-lg group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                      <ShoppingCart className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-bold font-sans">أمر شراء</span>
-                  </button>
-
-                  {/* Action 7: أمر تصنيع */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("cutRemnants");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-emerald-100 text-emerald-700 p-2 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                      <Factory className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-bold font-sans">أمر تصنيع</span>
-                  </button>
-
-                  {/* Action 8: تحويل مخزني */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("stockTransfers");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-indigo-100 text-indigo-700 p-2 rounded-lg group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                      <RefreshCw className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-bold font-sans">تحويل مخزني</span>
-                  </button>
-
-                  {/* Action 9: جرد مخزون */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("inventoryAdjustments");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-indigo-100 text-indigo-700 p-2 rounded-lg group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                      <FileSpreadsheet className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-bold font-sans">جرد مخزون</span>
-                  </button>
-
-                  {/* Action 10: عميل جديد */}
-                  <button
-                    onClick={() => {
-                      setSelectedSheetId("customers");
-                      setRowForm({});
-                      setIsAddingRow(true);
-                      setEditingRowIndex(null);
-                    }}
-                    className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-800 p-4.5 rounded-xl shadow-3xs flex flex-col items-center gap-2 transition-all cursor-pointer text-center group"
-                  >
-                    <div className="bg-emerald-100 text-emerald-700 p-2 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-bold font-sans">عميل جديد</span>
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -5426,9 +6963,9 @@ export default function App() {
             <div className="overflow-x-auto" id="table-scroll-wrapper">
               <table className="w-full text-left text-xs border-collapse" id="data-table">
                 {/* HEADERS */}
-                <thead className="bg-slate-100 text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200 sticky top-0 z-10" id="table-thead">
+                <thead className="bg-slate-100 text-[9px] sm:text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200 sticky top-0 z-10" id="table-thead">
                   <tr>
-                    <th className="px-4 py-3 border-r border-slate-200 text-center w-12" id="thead-th-checkbox">
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 border-r border-slate-200 text-center w-12" id="thead-th-checkbox">
                       <input
                         type="checkbox"
                         checked={paginatedRows.length > 0 && paginatedRows.every(row => selectedRows.includes(row))}
@@ -5439,7 +6976,7 @@ export default function App() {
                       />
                     </th>
                     {activeSheet.columns.map((col) => (
-                      <th key={col.key} className="px-4 py-3 border-r border-slate-200 text-slate-500" id={`thead-th-${col.key}`}>
+                      <th key={col.key} className="px-2 py-2 sm:px-4 sm:py-3 border-r border-slate-200 text-slate-505" id={`thead-th-${col.key}`}>
                         <div className="flex flex-col">
                           <span>{col.label}</span>
                           <span className="text-[9px] text-slate-400 font-sans font-normal lowercase tracking-wider">
@@ -5448,12 +6985,12 @@ export default function App() {
                         </div>
                       </th>
                     ))}
-                    <th className="px-4 py-3 text-center text-slate-500 font-bold w-24" id="thead-th-actions">Actions</th>
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 text-center text-slate-500 font-bold w-24" id="thead-th-actions">Actions</th>
                   </tr>
                 </thead>
 
                 {/* ROWS */}
-                <tbody className="divide-y divide-slate-100 font-mono text-[11px] bg-white" id="table-tbody">
+                <tbody className="divide-y divide-slate-100 font-mono text-[10px] sm:text-[11px] bg-white" id="table-tbody">
                   {paginatedRows.map((row, rIdx) => {
                     // Calculate absolute index in original rows to prevent search-filtering bugs
                     const originalIdx = activeSheet.rows.indexOf(row);
@@ -5466,7 +7003,7 @@ export default function App() {
                         }`}
                         id={`table-tr-${rIdx}`}
                       >
-                        <td className="px-4 py-2 border-r border-slate-100 text-center w-12" id={`table-td-checkbox-${rIdx}`}>
+                        <td className="px-2 py-1.5 sm:px-4 sm:py-2 border-r border-slate-100 text-center w-12" id={`table-td-checkbox-${rIdx}`}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -5478,14 +7015,14 @@ export default function App() {
                         {activeSheet.columns.map((col) => {
                           const val = row[col.key];
                           return (
-                            <td key={col.key} className="px-4 py-2 border-r border-slate-100 text-slate-700" id={`table-td-${rIdx}-${col.key}`}>
+                            <td key={col.key} className="px-2 py-1.5 sm:px-4 sm:py-2 border-r border-slate-100 text-slate-700" id={`table-td-${rIdx}-${col.key}`}>
                               {col.type === "currency" ? (
                                 <span className="text-emerald-700 font-semibold">
                                   {typeof val === "number" ? val.toLocaleString("en-US") : val} ج.م
                                 </span>
                               ) : col.type === "boolean" ? (
                                 <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold ${
                                     val ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-slate-100 text-slate-500 border border-slate-200"
                                   }`}
                                   id={`boolean-badge-${rIdx}-${col.key}`}
@@ -5498,7 +7035,7 @@ export default function App() {
                             </td>
                           );
                         })}
-                        <td className="px-4 py-2 text-center" id={`table-actions-td-${rIdx}`}>
+                        <td className="px-2 py-1.5 sm:px-4 sm:py-2 text-center" id={`table-actions-td-${rIdx}`}>
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               onClick={() => {
@@ -5511,6 +7048,17 @@ export default function App() {
                               id={`explore-row-btn-${rIdx}`}
                             >
                               <Network className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setViewingRowData(row);
+                                setViewingRowIndex(originalIdx);
+                              }}
+                              className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-all cursor-pointer"
+                              title="View Document Details / عرض التفاصيل"
+                              id={`view-row-btn-${rIdx}`}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleEditRow(originalIdx)}
@@ -5653,145 +7201,506 @@ export default function App() {
       )}
 
       {/* --- ADD / EDIT BUSINESS ROW DIALOG --- */}
-      {(isAddingRow || editingRowIndex !== null) && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" id="row-form-overlay" dir="rtl">
-          <div className="bg-white border border-slate-200 max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col text-slate-800 text-right" id="row-form-modal">
-            <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50" id="row-form-header">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2" id="row-form-title">
-                {isAddingRow ? <Plus className="w-5 h-5 text-emerald-600" /> : <Edit2 className="w-4 h-4 text-indigo-600" />}
-                {isAddingRow ? "إضافة سجل مالي/تشغيلي جديد" : "تحديث وتعديل السجل التشغيلي"}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsAddingRow(false);
-                  setEditingRowIndex(null);
-                }}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer text-lg font-bold"
-                id="row-form-close-icon"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[450px] grid grid-cols-1 gap-4 text-xs" id="row-form-body">
-              {/* Voice-to-Text Banner */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[11px] text-slate-600 flex items-start gap-2.5" id="dictation-info-banner">
-                <Mic className="w-4 h-4 text-slate-500 shrink-0 mt-0.5 animate-pulse" />
-                <div>
-                  <span className="font-semibold text-slate-800">🎙️ وضع الإملاء الصوتي السريع:</span> استخدم أزرار الميكروفون المجاورة لكل حقل لإدخال البيانات بالصوت باللغة <strong className="text-slate-800">العربية (عربي)</strong> أو <strong className="text-slate-800">الإنجليزية (EN)</strong>.
-                </div>
-              </div>
+      {(isAddingRow || editingRowIndex !== null) && (() => {
+        const isInvoiceSheet = selectedSheetId === "salesInvoices" || selectedSheetId === "purchaseInvoices";
+        
+        if (isInvoiceSheet) {
+          const isSales = selectedSheetId === "salesInvoices";
+          const invoiceNoKey = isSales ? "InvoiceNo" : "PurchaseInvoiceNo";
+          const orderNoKey = isSales ? "OrderNo" : "PONo";
+          const paidAmountKey = isSales ? "PaidAmount" : "PaidAmountEGP";
+          const partnerLabel = isSales ? "العميل (Customer)" : "المورد (Supplier)";
+          const partnerKey = isSales ? "CustomerCode" : "SupplierCode";
+          const partnerSheetId = isSales ? "customers" : "suppliers";
+          const partners = sheets.find(sh => sh.id === partnerSheetId)?.rows || [];
 
-              {activeSheet.columns.map((col) => (
-                <div key={col.key} className="flex flex-col gap-1.5" id={`form-field-group-${col.key}`}>
-                  <div className="flex justify-between items-center" id={`form-field-header-${col.key}`}>
-                    <label className="font-semibold text-slate-700 flex items-center gap-1" id={`form-field-label-${col.key}`}>
-                      <span>{COLUMN_TRANSLATIONS[col.key] || col.label}</span>
-                      <span className="font-mono text-[9px] text-slate-400">[{col.key}]</span>
-                    </label>
-                    {/* Dictation triggers for dictatable fields */}
-                    {(col.type === "string" || col.type === "number" || col.type === "currency" || !col.type) && (
-                      <div className="flex items-center gap-1.5" id={`dictation-controls-${col.key}`} dir="ltr">
-                        <button
-                          type="button"
-                          onClick={() => toggleDictation(col.key, "ar-EG")}
-                          className={`px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1 cursor-pointer transition-all border ${
-                            recordingField === col.key && recordingLang === "ar-EG"
-                              ? "bg-rose-500 text-white border-rose-600 animate-pulse shadow-sm font-semibold"
-                              : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
-                          }`}
-                          title="إملاء باللغة العربية"
-                          id={`dictate-ar-${col.key}`}
-                        >
-                          <Mic className="w-2.5 h-2.5" />
-                          <span>عربي</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleDictation(col.key, "en-US")}
-                          className={`px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1 cursor-pointer transition-all border ${
-                            recordingField === col.key && recordingLang === "en-US"
-                              ? "bg-rose-500 text-white border-rose-600 animate-pulse shadow-sm font-semibold"
-                              : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
-                          }`}
-                          title="Dictate in English"
-                          id={`dictate-en-${col.key}`}
-                        >
-                          <Mic className="w-2.5 h-2.5" />
-                          <span>EN</span>
-                        </button>
+          // Predefined items datalist for auto-suggestions
+          const itemsList = sheets.find(sh => sh.id === "items")?.rows || [];
+
+          // Handlers to edit dynamic lines
+          const addLine = () => {
+            setInvoiceLines(prev => [
+              ...prev,
+              { id: `LINE-${Date.now()}`, ItemCode: "", Quantity: 1, UnitPrice: 0 }
+            ]);
+          };
+
+          const removeLine = (id: string) => {
+            setInvoiceLines(prev => prev.filter(line => line.id !== id));
+          };
+
+          const updateLine = (id: string, key: string, value: any) => {
+            setInvoiceLines(prev => prev.map(line => {
+              if (line.id !== id) return line;
+              const updated = { ...line, [key]: value };
+              // Auto fill unit price from items sheet if they selected an item and price is known
+              if (key === "ItemCode") {
+                const matchedItem = itemsList.find(itm => itm.ItemCode === value);
+                if (matchedItem) {
+                  const priceSheet = sheets.find(s => s.id === "itemPrices");
+                  const priceRec = priceSheet?.rows.find(p => p.ItemCode === value && p.PriceListCode === (isSales ? "RETAIL" : "STANDARD"));
+                  if (priceRec) {
+                    updated.UnitPrice = parseFloat(priceRec.UnitPrice) || 0;
+                  }
+                }
+              }
+              return updated;
+            }));
+          };
+
+          // Calculated Invoice totals
+          const netTotal = invoiceLines.reduce((sum, line) => sum + ((parseFloat(line.Quantity) || 0) * (parseFloat(line.UnitPrice) || 0)), 0);
+          const vatAmount = parseFloat((netTotal * 0.14).toFixed(2));
+          const grandTotal = parseFloat((netTotal + vatAmount).toFixed(2));
+
+          return (
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" id="row-form-overlay" dir="rtl">
+              <div className="bg-white border border-slate-200 max-w-4xl w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col text-slate-800 text-right" id="row-form-modal">
+                {/* Modal Header */}
+                <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-indigo-900 text-white" id="row-form-header">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-indigo-800 text-indigo-200 p-2 rounded-lg">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold font-sans">
+                        {isAddingRow ? "إنشاء فاتورة جديدة متعددة البنود" : "تعديل تفاصيل الفاتورة القائمة"}
+                      </h3>
+                      <p className="text-[10px] text-indigo-200 mt-0.5">منشئ الفواتير الذكي متعدد البنود / Multi-Line Invoice Creator</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsAddingRow(false);
+                      setEditingRowIndex(null);
+                      setInvoiceLines([]);
+                    }}
+                    className="w-8 h-8 rounded-full bg-indigo-800/80 hover:bg-indigo-800 flex items-center justify-center text-white transition-colors cursor-pointer text-sm"
+                    id="row-form-close"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-5 text-xs" id="row-form-body">
+                  {/* Part 1: Invoice Header Meta */}
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4" id="invoice-header-meta">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-extrabold text-slate-700">رقم المستند / Invoice No</label>
+                      <input
+                        type="text"
+                        placeholder="مثال: SI-2026-011"
+                        value={rowForm[invoiceNoKey] || ""}
+                        onChange={(e) => setRowForm({ ...rowForm, [invoiceNoKey]: e.target.value })}
+                        className="bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-right font-bold text-slate-900"
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-extrabold text-slate-700">{partnerLabel}</label>
+                      <select
+                        value={rowForm[partnerKey] || ""}
+                        onChange={(e) => setRowForm({ ...rowForm, [partnerKey]: e.target.value })}
+                        className="bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-right font-bold text-slate-900"
+                      >
+                        <option value="">-- اختر الطرف التجاري --</option>
+                        {partners.map((p: any) => (
+                          <option key={p[partnerKey]} value={p[partnerKey]}>
+                            {p.ArabicName || p.CustomerName || p.SupplierName} ({p[partnerKey]})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-extrabold text-slate-700">تاريخ الفاتورة / Invoice Date</label>
+                      <input
+                        type="date"
+                        value={rowForm.InvoiceDate || ""}
+                        onChange={(e) => setRowForm({ ...rowForm, InvoiceDate: e.target.value })}
+                        className="bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-sans text-right text-slate-900 font-bold"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-extrabold text-slate-700">رقم أمر الشراء/البيع / Order No</label>
+                      <input
+                        type="text"
+                        placeholder="مثال: SO-2026-001"
+                        value={rowForm[orderNoKey] || ""}
+                        onChange={(e) => setRowForm({ ...rowForm, [orderNoKey]: e.target.value })}
+                        className="bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-right"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-extrabold text-slate-700">المبلغ المدفوع حالياً / Paid Amount (EGP)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="0.00"
+                        value={rowForm[paidAmountKey] ?? 0}
+                        onChange={(e) => setRowForm({ ...rowForm, [paidAmountKey]: parseFloat(e.target.value) || 0 })}
+                        className="bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-right text-slate-900 font-bold"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-extrabold text-slate-700">حالة السداد المتوقعة / Payment Status</label>
+                      <div className="py-2.5 px-3 rounded-lg border border-slate-200 bg-slate-100 text-slate-700 font-bold flex items-center justify-center gap-2">
+                        {parseFloat(rowForm[paidAmountKey] || 0) >= grandTotal ? (
+                          <span className="text-emerald-700">🟢 مدفوع بالكامل (Fully Paid)</span>
+                        ) : parseFloat(rowForm[paidAmountKey] || 0) > 0 ? (
+                          <span className="text-amber-700">🟡 مدفوع جزئياً (Partially Paid)</span>
+                        ) : (
+                          <span className="text-rose-700">🔴 غير مدفوع (Unpaid)</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Part 2: Invoice Items Lines Grid */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                      <h4 className="text-sm font-extrabold text-slate-950 flex items-center gap-1.5">
+                        <Boxes className="w-4 h-4 text-indigo-600" />
+                        <span>بنود وأصناف الفاتورة التفصيلية ({invoiceLines.length}) / Invoice Line Items</span>
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={addLine}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-[0.98]"
+                        id="invoice-add-item-line"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>إضافة بند / صنف جديد</span>
+                      </button>
+                    </div>
+
+                    {invoiceLines.length === 0 ? (
+                      <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center text-slate-400 bg-slate-50/50 flex flex-col items-center gap-2">
+                        <AlertTriangle className="w-8 h-8 text-slate-300" />
+                        <span className="font-extrabold text-slate-600 text-xs">لا يوجد بنود مضافة بعد لهذه الفاتورة.</span>
+                        <p className="text-[10px] text-slate-400 max-w-sm">يرجى الضغط على زر "إضافة بند / صنف جديد" للبدء في تعبئة الأصناف والكميات والأسعار.</p>
+                      </div>
+                    ) : (
+                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                        <table className="w-full text-right border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                              <th className="py-2.5 px-3 w-12 text-center">م</th>
+                              <th className="py-2.5 px-3">اسم الصنف أو البيان الفني (Item / Details)</th>
+                              <th className="py-2.5 px-3 w-28 text-center">الكمية (Qty)</th>
+                              <th className="py-2.5 px-3 w-32 text-center">سعر الوحدة (Price)</th>
+                              <th className="py-2.5 px-3 w-32 text-center">الإجمالي (Total)</th>
+                              <th className="py-2.5 px-3 w-16 text-center">حذف</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-150 bg-white">
+                            {invoiceLines.map((line, idx) => {
+                              const lineSub = parseFloat(((parseFloat(line.Quantity) || 0) * (parseFloat(line.UnitPrice) || 0)).toFixed(2));
+                              return (
+                                <tr key={line.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="py-2 px-3 text-center text-slate-400 font-bold font-mono">{idx + 1}</td>
+                                  
+                                  <td className="py-2 px-3 relative">
+                                    <input
+                                      type="text"
+                                      list={`items-list-${line.id}`}
+                                      placeholder="اختر صنفاً من المخزن أو اكتب بياناً حراً..."
+                                      value={line.ItemCode || ""}
+                                      onChange={(e) => updateLine(line.id, "ItemCode", e.target.value)}
+                                      className="w-full border border-slate-200 bg-white rounded-lg p-2 font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
+                                    />
+                                    <datalist id={`items-list-${line.id}`}>
+                                      {itemsList.map((itm: any) => (
+                                        <option key={itm.ItemCode} value={itm.ItemCode}>
+                                          {itm.ItemName || itm.ArabicName}
+                                        </option>
+                                      ))}
+                                    </datalist>
+                                  </td>
+
+                                  <td className="py-2 px-3">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      placeholder="0.00"
+                                      value={line.Quantity}
+                                      onChange={(e) => updateLine(line.id, "Quantity", parseFloat(e.target.value) || 0)}
+                                      className="w-full border border-slate-200 rounded-lg p-2 font-mono text-center text-slate-900 font-bold"
+                                    />
+                                  </td>
+
+                                  <td className="py-2 px-3">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      placeholder="0.00"
+                                      value={line.UnitPrice}
+                                      onChange={(e) => updateLine(line.id, "UnitPrice", parseFloat(e.target.value) || 0)}
+                                      className="w-full border border-slate-200 rounded-lg p-2 font-mono text-center text-slate-900 font-bold"
+                                    />
+                                  </td>
+
+                                  <td className="py-2 px-3 text-center font-mono font-bold text-slate-900 bg-slate-50/40">
+                                    {lineSub.toLocaleString()} EGP
+                                  </td>
+
+                                  <td className="py-2 px-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => removeLine(line.id)}
+                                      className="w-7 h-7 rounded-lg text-rose-500 hover:text-white hover:bg-rose-500 flex items-center justify-center border border-slate-200 hover:border-rose-600 transition-all cursor-pointer mx-auto"
+                                      title="حذف البند"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                     )}
                   </div>
 
-                  {col.type === "boolean" ? (
-                    <select
-                      value={String(rowForm[col.key] ?? false)}
-                      onChange={(e) => setRowForm({ ...rowForm, [col.key]: e.target.value === "true" })}
-                      className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right"
-                      id={`form-input-${col.key}`}
-                    >
-                      <option value="true">نعم (TRUE)</option>
-                      <option value="false">لا (FALSE)</option>
-                    </select>
-                  ) : col.type === "date" ? (
-                    <input
-                      type="date"
-                      value={rowForm[col.key] || ""}
-                      onChange={(e) => setRowForm({ ...rowForm, [col.key]: e.target.value })}
-                      className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right font-sans"
-                      id={`form-input-${col.key}`}
-                    />
-                  ) : col.type === "number" || col.type === "currency" ? (
-                    <input
-                      type="number"
-                      step="any"
-                      value={rowForm[col.key] ?? 0}
-                      onChange={(e) => setRowForm({ ...rowForm, [col.key]: parseFloat(e.target.value) || 0 })}
-                      className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right"
-                      id={`form-input-${col.key}`}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder={`أدخل قيمة الحقل ${col.label}...`}
-                      value={rowForm[col.key] || ""}
-                      onChange={(e) => setRowForm({ ...rowForm, [col.key]: e.target.value })}
-                      className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right"
-                      id={`form-input-${col.key}`}
-                    />
-                  )}
-
-                  {recordingField === col.key && (
-                    <div className="text-[10px] text-rose-500 flex items-center gap-1.5 mt-0.5 animate-pulse justify-start" id={`listening-indicator-${col.key}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                      <span>جاري الاستماع للحديث باللغة {recordingLang === "ar-EG" ? "العربية" : "الإنجليزية"}... تحدث الآن.</span>
+                  {/* Part 3: Live Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2" id="invoice-totals-summary">
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-center text-right">
+                      <span className="text-[10px] text-slate-400 font-bold">ملاحظات تشغيلية / Invoice Notes:</span>
+                      <p className="text-slate-500 text-[10px] leading-relaxed mt-1">
+                        * يتم حساب ضريبة القيمة المضافة (VAT) تلقائياً بمعدل قانوني 14%.<br />
+                        * ترحيل الفاتورة يؤثر فورياً على رصيد المخزن للكميات، وحساب الأستاذ للعميل/المورد.
+                      </p>
                     </div>
-                  )}
+
+                    <div className="bg-indigo-50/40 border border-indigo-100 rounded-xl p-4 flex flex-col gap-2">
+                      <div className="flex justify-between items-center bg-white border border-indigo-100 p-2.5 rounded-lg mb-1">
+                        <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700 font-bold text-xs">
+                          <input
+                            type="checkbox"
+                            checked={isVatEnabled}
+                            onChange={(e) => setIsVatEnabled(e.target.checked)}
+                            className="w-4.5 h-4.5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                            id="vat-calculation-toggle"
+                          />
+                          <span>حساب ضريبة القيمة المضافة (14%) / Apply 14% VAT Tax</span>
+                        </label>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-black ${isVatEnabled ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"}`}>
+                          {isVatEnabled ? "نشط (ON)" : "ملغي (OFF)"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-600 font-semibold">
+                        <span>الإجمالي الفرعي (قبل الضريبة) / Net Total:</span>
+                        <span className="font-mono text-slate-900">{netTotal.toLocaleString()} EGP</span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-600 font-semibold">
+                        <span>ضريبة القيمة المضافة (14%) / VAT Amount:</span>
+                        <span className="font-mono text-slate-900">{vatAmount.toLocaleString()} EGP</span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-900 font-extrabold text-xs border-t border-indigo-100 pt-2">
+                        <span>الإجمالي الشامل (ضريبة شاملة) / Grand Total:</span>
+                        <span className="font-mono text-indigo-700 text-sm">{grandTotal.toLocaleString()} EGP</span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-700 font-extrabold border-t border-dashed border-indigo-150 pt-2">
+                        <span>الرصيد المتبقي بذمة العميل / Partner Balance:</span>
+                        <span className="font-mono text-rose-700">{(grandTotal - parseFloat(rowForm[paidAmountKey] || 0)).toLocaleString()} EGP</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ))}
+
+                {/* Footer buttons */}
+                <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center flex-row-reverse" id="row-form-footer">
+                  <div className="flex gap-2.5 flex-row-reverse">
+                    <button
+                      onClick={() => {
+                        setIsAddingRow(false);
+                        setEditingRowIndex(null);
+                        setInvoiceLines([]);
+                      }}
+                      className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer bg-white font-bold text-xs"
+                      id="invoice-cancel-btn"
+                    >
+                      إلغاء (Cancel)
+                    </button>
+                    <button
+                      onClick={() => handleSaveInvoice(rowForm, invoiceLines)}
+                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all cursor-pointer shadow-sm active:scale-[0.98] text-xs"
+                      id="invoice-save-btn"
+                    >
+                      تأكيد وحفظ الفاتورة والبنود (Save Invoice)
+                    </button>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={handleAutoFillTestData}
+                    className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-extrabold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors text-xs active:scale-[0.97]"
+                    id="invoice-autofill-btn"
+                  >
+                    <span>🧪 تعبئة بيانات تجريبية عشوائية للاختبار السريع / Auto-Fill Test</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2.5 flex-row-reverse" id="row-form-footer">
-              <button
-                onClick={() => {
-                  setIsAddingRow(false);
-                  setEditingRowIndex(null);
-                }}
-                className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer bg-white font-bold"
-                id="row-form-cancel-btn"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleSaveRow}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold transition-colors cursor-pointer"
-                id="row-form-save-btn"
-              >
-                تأكيد وحفظ التغييرات
-              </button>
+          );
+        }
+
+        return (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" id="row-form-overlay" dir="rtl">
+            <div className="bg-white border border-slate-200 max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col text-slate-800 text-right" id="row-form-modal">
+              <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50" id="row-form-header">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2" id="row-form-title">
+                  {isAddingRow ? <Plus className="w-5 h-5 text-emerald-600" /> : <Edit2 className="w-4 h-4 text-indigo-600" />}
+                  {isAddingRow ? "إضافة سجل مالي/تشغيلي جديد" : "تحديث وتعديل السجل التشغيلي"}
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsAddingRow(false);
+                    setEditingRowIndex(null);
+                  }}
+                  className="text-slate-400 hover:text-slate-600 cursor-pointer text-lg font-bold"
+                  id="row-form-close-icon"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[450px] grid grid-cols-1 gap-4 text-xs" id="row-form-body">
+                {/* Voice-to-Text Banner */}
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[11px] text-slate-600 flex items-start gap-2.5" id="dictation-info-banner">
+                  <Mic className="w-4 h-4 text-slate-500 shrink-0 mt-0.5 animate-pulse" />
+                  <div>
+                    <span className="font-semibold text-slate-800">🎙️ وضع الإملاء الصوتي السريع:</span> استخدم أزرار الميكروفون المجاورة لكل حقل لإدخال البيانات بالصوت باللغة <strong className="text-slate-800">العربية (عربي)</strong> أو <strong className="text-slate-800">الإنجليزية (EN)</strong>.
+                  </div>
+                </div>
+
+                {activeSheet.columns.map((col) => (
+                  <div key={col.key} className="flex flex-col gap-1.5" id={`form-field-group-${col.key}`}>
+                    <div className="flex justify-between items-center" id={`form-field-header-${col.key}`}>
+                      <label className="font-semibold text-slate-700 flex items-center gap-1" id={`form-field-label-${col.key}`}>
+                        <span>{COLUMN_TRANSLATIONS[col.key] || col.label}</span>
+                        <span className="font-mono text-[9px] text-slate-400">[{col.key}]</span>
+                      </label>
+                      {/* Dictation triggers for dictatable fields */}
+                      {(col.type === "string" || col.type === "number" || col.type === "currency" || !col.type) && (
+                        <div className="flex items-center gap-1.5" id={`dictation-controls-${col.key}`} dir="ltr">
+                          <button
+                            type="button"
+                            onClick={() => toggleDictation(col.key, "ar-EG")}
+                            className={`px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1 cursor-pointer transition-all border ${
+                              recordingField === col.key && recordingLang === "ar-EG"
+                                ? "bg-rose-500 text-white border-rose-600 animate-pulse shadow-sm font-semibold"
+                                : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                            }`}
+                            title="إملاء باللغة العربية"
+                            id={`dictate-ar-${col.key}`}
+                          >
+                            <Mic className="w-2.5 h-2.5" />
+                            <span>عربي</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleDictation(col.key, "en-US")}
+                            className={`px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1 cursor-pointer transition-all border ${
+                              recordingField === col.key && recordingLang === "en-US"
+                                ? "bg-rose-500 text-white border-rose-600 animate-pulse shadow-sm font-semibold"
+                                : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                            }`}
+                            title="Dictate in English"
+                            id={`dictate-en-${col.key}`}
+                          >
+                            <Mic className="w-2.5 h-2.5" />
+                            <span>EN</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {col.type === "boolean" ? (
+                      <select
+                        value={String(rowForm[col.key] ?? false)}
+                        onChange={(e) => setRowForm({ ...rowForm, [col.key]: e.target.value === "true" })}
+                        className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right"
+                        id={`form-input-${col.key}`}
+                      >
+                        <option value="true">نعم (TRUE)</option>
+                        <option value="false">لا (FALSE)</option>
+                      </select>
+                    ) : col.type === "date" ? (
+                      <input
+                        type="date"
+                        value={rowForm[col.key] || ""}
+                        onChange={(e) => setRowForm({ ...rowForm, [col.key]: e.target.value })}
+                        className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right font-sans"
+                        id={`form-input-${col.key}`}
+                      />
+                    ) : col.type === "number" || col.type === "currency" ? (
+                      <input
+                        type="number"
+                        step="any"
+                        value={rowForm[col.key] ?? 0}
+                        onChange={(e) => setRowForm({ ...rowForm, [col.key]: parseFloat(e.target.value) || 0 })}
+                        className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right"
+                        id={`form-input-${col.key}`}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder={`أدخل قيمة الحقل ${col.label}...`}
+                        value={rowForm[col.key] || ""}
+                        onChange={(e) => setRowForm({ ...rowForm, [col.key]: e.target.value })}
+                        className="bg-white border border-slate-200 text-slate-800 p-2 rounded w-full focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 text-right"
+                        id={`form-input-${col.key}`}
+                      />
+                    )}
+
+                    {recordingField === col.key && (
+                      <div className="text-[10px] text-rose-500 flex items-center gap-1.5 mt-0.5 animate-pulse justify-start" id={`listening-indicator-${col.key}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        <span>جاري الاستماع للحديث باللغة {recordingLang === "ar-EG" ? "العربية" : "الإنجليزية"}... تحدث الآن.</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center flex-row-reverse" id="row-form-footer">
+                <div className="flex gap-2.5 flex-row-reverse">
+                  <button
+                    onClick={() => {
+                      setIsAddingRow(false);
+                      setEditingRowIndex(null);
+                    }}
+                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer bg-white font-bold text-xs"
+                    id="row-form-cancel-btn"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    onClick={handleSaveRow}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold transition-colors cursor-pointer text-xs"
+                    id="row-form-save-btn"
+                  >
+                    تأكيد وحفظ التغييرات
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAutoFillTestData}
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-extrabold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors text-xs active:scale-[0.97]"
+                  id="row-form-autofill-btn"
+                >
+                  <span>🧪 تعبئة بيانات تجريبية عشوائية للاختبار / Auto-Fill</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* --- ERP RELATIONAL TABLE EXPLORER MODAL / مستكشف العلاقات --- */}
       {exploringRow && exploringSheetId && (() => {
@@ -5957,6 +7866,207 @@ export default function App() {
 
                 {/* RIGHT COLUMN: GRAPH VISUAL & RELATED TABLES */}
                 <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6" id="relations-explorer-relations-pane">
+                  {/* BEAUTIFUL CORPORATE ARABIC TAX INVOICE PRINTOUT */}
+                  {(exploringSheetId === "salesInvoices" || exploringSheetId === "purchaseInvoices") && (() => {
+                    const isSales = exploringSheetId === "salesInvoices";
+                    const invoiceNoKey = isSales ? "InvoiceNo" : "PurchaseInvoiceNo";
+                    const invoiceNo = exploringRow[invoiceNoKey];
+                    
+                    // Fetch corresponding lines
+                    const childSheetId = isSales ? "salesInvoiceLines" : "purchaseInvoiceLines";
+                    const childSheet = sheets.find(s => s.id === childSheetId);
+                    const matchingLines = childSheet
+                      ? childSheet.rows.filter(r => String(r[invoiceNoKey]) === String(invoiceNo))
+                      : [];
+
+                    // Fetch customer/supplier info
+                    const partnerSheetId = isSales ? "customers" : "suppliers";
+                    const partnerKey = isSales ? "CustomerCode" : "SupplierCode";
+                    const partnerVal = exploringRow[partnerKey];
+                    const partnerSheet = sheets.find(s => s.id === partnerSheetId);
+                    const partnerRow = partnerSheet?.rows.find(p => p[partnerKey] === partnerVal);
+                    const partnerName = partnerRow ? (partnerRow.ArabicName || partnerRow.CustomerName || partnerRow.SupplierName) : "غير محدد";
+
+                    // Fetch item names
+                    const itemsSheet = sheets.find(s => s.id === "items");
+
+                    const printInvoice = () => {
+                      const printContent = document.getElementById("invoice-printable-area");
+                      if (!printContent) return;
+                      
+                      const win = window.open("", "_blank");
+                      if (win) {
+                        win.document.write(`
+                          <html>
+                            <head>
+                              <title>فاتورة ضريبية - ${invoiceNo}</title>
+                              <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                              <style>
+                                body { font-family: 'Inter', system-ui, sans-serif; direction: rtl; }
+                                @media print {
+                                  .no-print { display: none; }
+                                }
+                              </style>
+                            </head>
+                            <body class="p-8 text-slate-800">
+                              <div class="max-w-4xl mx-auto border border-slate-300 rounded-xl p-8 bg-white">
+                                ${printContent.innerHTML}
+                              </div>
+                              <script>
+                                window.onload = function() { window.print(); window.close(); }
+                              </script>
+                            </body>
+                          </html>
+                        `);
+                        win.document.close();
+                      }
+                    };
+
+                    return (
+                      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-4 text-right" dir="rtl">
+                        <div className="flex justify-between items-center border-b border-slate-150 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 bg-indigo-600 rounded-full animate-pulse" />
+                            <h5 className="text-sm font-extrabold text-slate-900">معاينة الفاتورة والطباعة (Invoice Preview)</h5>
+                          </div>
+                          <button
+                            onClick={printInvoice}
+                            className="bg-indigo-900 hover:bg-indigo-800 text-white text-[11px] px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>طباعة الفاتورة الضريبية / Print</span>
+                          </button>
+                        </div>
+
+                        {/* Invoice Printable Sheet wrapper */}
+                        <div id="invoice-printable-area" className="border border-slate-200 rounded-xl p-6 bg-slate-50/10 flex flex-col gap-5 text-slate-800 text-xs">
+                          {/* Invoice Header */}
+                          <div className="flex justify-between items-start border-b-2 border-slate-800 pb-4">
+                            <div>
+                              <h2 className="text-lg font-extrabold text-slate-950 font-sans">
+                                {isSales ? "شركة القاهرة لتجارة الإستيل" : "مستند مشتريات وارد"}
+                              </h2>
+                              <p className="text-[10px] text-slate-500 mt-1">تجارة وتصنيع حديد الاستانلس ستيل بكافة أنواعه والواحه</p>
+                              <p className="text-[9px] text-slate-400 mt-0.5">رقم التسجيل الضريبي: ٤٢٨-٥٣٢-٧١٩</p>
+                            </div>
+                            <div className="text-left" dir="ltr">
+                              <span className="bg-slate-900 text-white text-[10px] px-3 py-1 rounded font-extrabold uppercase tracking-widest">
+                                TAX INVOICE
+                              </span>
+                              <p className="text-slate-500 text-[10px] font-mono mt-2 font-bold">Doc #: {invoiceNo}</p>
+                              <p className="text-slate-400 text-[9px]">Date: {exploringRow.InvoiceDate}</p>
+                            </div>
+                          </div>
+
+                          {/* Invoice Info Metadata Grid */}
+                          <div className="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg border border-slate-150">
+                            <div className="flex flex-col gap-2">
+                              <p className="text-slate-400 font-bold text-[10px] border-b border-slate-200 pb-1">صادرة إلى (Bill To):</p>
+                              <div className="flex flex-col gap-1">
+                                <span className="font-extrabold text-slate-900 text-sm">{partnerName}</span>
+                                <span className="text-slate-500 font-mono text-[10px]">كود الحساب: {partnerVal || "N/A"}</span>
+                                {partnerRow && (
+                                  <>
+                                    <span className="text-slate-500">{partnerRow.Address || "القاهرة، جمهورية مصر العربية"}</span>
+                                    <span className="text-slate-500">{partnerRow.Phone || "01xxxxxxxxx"}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                              <p className="text-slate-400 font-bold text-[10px] border-b border-slate-200 pb-1">تفاصيل المستند (Document details):</p>
+                              <div className="grid grid-cols-2 gap-y-1.5 text-[11px] font-mono">
+                                <span className="text-slate-400 font-sans">رقم الفاتورة:</span>
+                                <span className="text-slate-900 font-bold text-left">{invoiceNo}</span>
+                                <span className="text-slate-400 font-sans">رقم أمر الحركة:</span>
+                                <span className="text-slate-900 font-bold text-left">{exploringRow.OrderNo || "N/A"}</span>
+                                <span className="text-slate-400 font-sans">حالة الفاتورة:</span>
+                                <span className={`font-bold text-left ${exploringRow.Status === "Fully Paid" ? "text-emerald-600" : "text-rose-600"}`}>
+                                  {exploringRow.Status === "Fully Paid" ? "مدفوعة بالكامل" : exploringRow.Status === "Partially Paid" ? "مدفوعة جزئياً" : "غير مدفوعة"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Items Table */}
+                          <div className="border border-slate-200 rounded-lg overflow-hidden">
+                            <table className="w-full text-right border-collapse">
+                              <thead>
+                                <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-200 text-[11px]">
+                                  <th className="py-2 px-3 w-10 text-center">م</th>
+                                  <th className="py-2 px-3">البيان الفني والصنف (Item Specifications)</th>
+                                  <th className="py-2 px-3 w-20 text-center">الكمية</th>
+                                  <th className="py-2 px-3 w-28 text-center">الفئة (سعر الوحدة)</th>
+                                  <th className="py-2 px-3 w-28 text-center">الإجمالي الفرعي</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-150 text-slate-700 font-medium bg-white">
+                                {matchingLines.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={5} className="py-4 text-center text-slate-400 italic">
+                                      لا توجد بنود مدخلة لهذه الفاتورة
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  matchingLines.map((line, lIdx) => {
+                                    const itm = itemsSheet?.rows.find(i => i.ItemCode === line.ItemCode);
+                                    const desc = itm ? (itm.ItemName || itm.ArabicName) : line.ItemCode;
+                                    const qty = parseFloat(line.Quantity) || 0;
+                                    const price = parseFloat(line.UnitPrice) || 0;
+                                    const total = parseFloat((qty * price).toFixed(2));
+                                    return (
+                                      <tr key={lIdx} className="hover:bg-slate-50/30">
+                                        <td className="py-2 px-3 text-center text-slate-400 font-mono">{lIdx + 1}</td>
+                                        <td className="py-2 px-3">
+                                          <div className="flex flex-col">
+                                            <span className="font-bold text-slate-900">{desc}</span>
+                                            <span className="text-[10px] text-slate-400 font-mono">{line.ItemCode}</span>
+                                          </div>
+                                        </td>
+                                        <td className="py-2 px-3 text-center font-mono font-bold">{qty}</td>
+                                        <td className="py-2 px-3 text-center font-mono">{price.toLocaleString()} EGP</td>
+                                        <td className="py-2 px-3 text-center font-mono font-bold text-slate-900">
+                                          {total.toLocaleString()} EGP
+                                        </td>
+                                      </tr>
+                                    );
+                                  })
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Invoice Totals Calculation */}
+                          <div className="flex justify-end mt-2">
+                            <div className="w-80 border border-slate-200 bg-slate-50 rounded-lg p-3.5 flex flex-col gap-2 font-medium">
+                              <div className="flex justify-between items-center text-slate-500">
+                                <span>القيمة الإجمالية (خاضع للضريبة):</span>
+                                <span className="font-mono text-slate-800 font-bold">{Number(exploringRow.NetTotal || 0).toLocaleString()} EGP</span>
+                              </div>
+                              <div className="flex justify-between items-center text-slate-500">
+                                <span>ضريبة القيمة المضافة (١٤٪):</span>
+                                <span className="font-mono text-slate-800 font-bold">{Number(exploringRow.VATAmount || 0).toLocaleString()} EGP</span>
+                              </div>
+                              <div className="flex justify-between items-center text-slate-900 font-extrabold text-[13px] border-t border-slate-200 pt-2">
+                                <span>الإجمالي الشامل (بالضريبة):</span>
+                                <span className="font-mono text-indigo-700 text-sm font-extrabold">{Number(exploringRow.GrandTotal || 0).toLocaleString()} EGP</span>
+                              </div>
+                              <div className="flex justify-between items-center text-slate-600 font-bold border-t border-slate-200 pt-2">
+                                <span>المسدد من العميل:</span>
+                                <span className="font-mono text-emerald-700 font-extrabold">{Number(exploringRow.PaidAmount || 0).toLocaleString()} EGP</span>
+                              </div>
+                              <div className="flex justify-between items-center text-slate-950 font-extrabold border-t-2 border-slate-800 pt-2">
+                                <span>الرصيد المتبقي:</span>
+                                <span className="font-mono text-rose-700 text-sm">{(Number(exploringRow.GrandTotal || 0) - Number(exploringRow.PaidAmount || 0)).toLocaleString()} EGP</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* VISUAL CONNECTIVITY SCHEMATIC */}
                   <div className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 relative overflow-hidden shadow-md">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl" />
@@ -6288,6 +8398,143 @@ export default function App() {
         </div>
       )}
 
+      {/* --- BULK UPDATE STATUS BOTTOM DRAWER --- */}
+      <AnimatePresence>
+        {isBulkUpdateDrawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsBulkUpdateDrawerOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 cursor-pointer"
+              id="bulk-drawer-backdrop"
+            />
+
+            {/* Bottom Drawer */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 inset-x-0 bg-white rounded-t-[2.5rem] border-t border-slate-200 shadow-2xl p-6 md:p-8 z-51 flex flex-col gap-5 max-w-2xl mx-auto text-slate-800"
+              id="bulk-update-drawer"
+              dir="rtl"
+            >
+              {/* Drag Handle Indicator */}
+              <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-1" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4" id="bulk-drawer-header">
+                <div className="flex items-center gap-2.5">
+                  <div className="bg-indigo-50 text-indigo-700 p-2 rounded-xl">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-base font-extrabold text-slate-950 font-sans">تحديث الحالة جماعياً (Bulk Status Update)</h3>
+                    <p className="text-[11px] text-slate-400">تطبيق قيمة موحدة لحقل الحالة على جميع السجلات التشغيلية المحددة</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsBulkUpdateDrawerOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                  id="bulk-drawer-close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Description & Selection Info */}
+              <div className="bg-indigo-50/50 border border-indigo-100/60 rounded-2xl p-4 flex flex-col gap-1.5 text-right" id="bulk-drawer-info">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
+                  <span className="text-xs font-extrabold text-indigo-950">السجلات المحددة حالياً:</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  سيتم تطبيق تحديث الحالة الموحد على <span className="font-extrabold text-indigo-700 font-mono">{selectedRows.length}</span> سجل من ورقة العمل الحالية (<span className="font-bold text-slate-900">{activeSheet.arabicName}</span>).
+                </p>
+              </div>
+
+              {/* Status Selector Choice Cards */}
+              <div className="flex flex-col gap-3 text-right" id="bulk-drawer-selection-section">
+                <span className="text-xs font-bold text-slate-500">اختر إحدى الحالات الشائعة أو اكتب حالة مخصصة:</span>
+                
+                <div className="grid grid-cols-2 gap-2.5" id="bulk-drawer-presets">
+                  {statusColumn && (() => {
+                    const existingStatuses = Array.from(new Set(activeSheet.rows.map(r => r[statusColumn.key]).filter(Boolean)))
+                      .slice(0, 4);
+                    
+                    const listToRender = existingStatuses.length > 0 ? existingStatuses : ["Pending", "Completed", "Cancelled", "In Progress"];
+                    
+                    return listToRender.map((status: any) => {
+                      const isSelected = selectedBulkStatus === status;
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setSelectedBulkStatus(status)}
+                          className={`flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-xs font-extrabold cursor-pointer text-right ${
+                            isSelected
+                              ? "border-indigo-600 bg-indigo-50 text-indigo-950"
+                              : "border-slate-100 bg-slate-50 hover:bg-slate-100 text-slate-700"
+                          }`}
+                          id={`bulk-preset-card-${status}`}
+                        >
+                          <span>{status}</span>
+                          {isSelected && <Check className="w-4 h-4 text-indigo-600" />}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+
+                {/* Custom Status Input */}
+                <div className="flex flex-col gap-1.5 mt-2" id="bulk-drawer-custom-status">
+                  <label htmlFor="custom-status-input" className="text-xs font-bold text-slate-500">حالة مخصصة (Custom Status):</label>
+                  <div className="relative">
+                    <input
+                      id="custom-status-input"
+                      type="text"
+                      placeholder="اكتب اسم حالة مخصصة هنا..."
+                      value={selectedBulkStatus}
+                      onChange={(e) => setSelectedBulkStatus(e.target.value)}
+                      className="w-full text-xs font-bold border border-slate-300 rounded-xl px-4 py-3 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-right pr-4"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-slate-100" id="bulk-drawer-actions">
+                <button
+                  type="button"
+                  disabled={!selectedBulkStatus.trim()}
+                  onClick={() => handleBulkStatusUpdate(selectedBulkStatus.trim())}
+                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all ${
+                    selectedBulkStatus.trim()
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white active:scale-[0.98]"
+                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                  }`}
+                  id="bulk-drawer-confirm-btn"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>تطبيق التحديث على السجلات ({selectedRows.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsBulkUpdateDrawerOpen(false)}
+                  className="px-5 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors text-xs font-extrabold cursor-pointer bg-white"
+                  id="bulk-drawer-cancel-btn"
+                >
+                  إلغاء (Cancel)
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* --- CUSTOM DIALOGS & CONFIRMATIONS --- */}
       {dialogConfig?.isOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" id="custom-dialog-overlay">
@@ -6338,6 +8585,256 @@ export default function App() {
                   {dialogConfig.confirmText || "OK"}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- RECORD / DOCUMENT VIEW MODAL --- */}
+      {viewingRowData && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" id="viewing-row-modal-overlay" dir="rtl">
+          <div className="bg-white border border-slate-200 max-w-4xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col text-slate-800" id="viewing-row-modal">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-150 flex justify-between items-center bg-slate-50" id="view-row-header">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-100 p-2.5 rounded-xl text-emerald-700 border border-emerald-200 shadow-xs">
+                  <Eye className="w-5 h-5" />
+                </div>
+                <div className="text-right">
+                  <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                    تفاصيل السجل والمستند / Document View Details
+                  </h3>
+                  <p className="text-xs text-slate-500 font-sans mt-0.5">
+                    معاينة وقراءة بيانات السجل بالكامل من جدول {activeSheet.arabicName || activeSheet.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setViewingRowData(null);
+                  setViewingRowIndex(null);
+                }}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all border border-slate-200"
+                id="viewing-row-close-btn"
+              >
+                ✕ إغلاق / Close
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6" id="view-row-body">
+              {(selectedSheetId === "salesInvoices" || selectedSheetId === "purchaseInvoices") ? (() => {
+                const isSales = selectedSheetId === "salesInvoices";
+                const invoiceNoKey = isSales ? "InvoiceNo" : "PurchaseInvoiceNo";
+                const invoiceNo = viewingRowData.InvoiceNo || viewingRowData.PurchaseInvoiceNo;
+                
+                // Fetch corresponding lines
+                const childSheetId = isSales ? "salesInvoiceLines" : "purchaseInvoiceLines";
+                const childSheet = sheets.find(s => s.id === childSheetId);
+                const matchingLines = childSheet
+                  ? childSheet.rows.filter(r => String(r[invoiceNoKey]) === String(invoiceNo))
+                  : [];
+
+                // Fetch customer/supplier info
+                const partnerSheetId = isSales ? "customers" : "suppliers";
+                const partnerKey = isSales ? "CustomerCode" : "SupplierCode";
+                const partnerVal = viewingRowData[partnerKey];
+                const partnerSheet = sheets.find(s => s.id === partnerSheetId);
+                const partnerRow = partnerSheet?.rows.find(p => p[partnerKey] === partnerVal);
+                const partnerName = partnerRow ? (partnerRow.ArabicName || partnerRow.CustomerName || partnerRow.SupplierName) : "غير محدد";
+
+                const printInvoiceLocal = () => {
+                  const printContent = document.getElementById("document-invoice-printable-area");
+                  if (!printContent) return;
+                  
+                  const win = window.open("", "_blank");
+                  if (win) {
+                    win.document.write(`
+                      <html>
+                        <head>
+                          <title>فاتورة ضريبية - ${invoiceNo}</title>
+                          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                          <style>
+                            body { font-family: 'Inter', system-ui, sans-serif; direction: rtl; }
+                            @media print {
+                              .no-print { display: none; }
+                            }
+                          </style>
+                        </head>
+                        <body class="p-8 text-slate-800">
+                          <div class="max-w-4xl mx-auto border border-slate-300 rounded-xl p-8 bg-white">
+                            ${printContent.innerHTML}
+                          </div>
+                          <script>
+                            window.onload = function() { window.print(); window.close(); }
+                          </script>
+                        </body>
+                      </html>
+                    `);
+                    win.document.close();
+                  }
+                };
+
+                return (
+                  <div className="flex flex-col gap-6" id="view-invoice-pane">
+                    <div className="flex justify-between items-center border-b border-slate-150 pb-3">
+                      <span className="text-xs text-slate-500 font-bold">نموذج الفاتورة الضريبية الرسمية للدولية ستيل</span>
+                      <button
+                        onClick={printInvoiceLocal}
+                        className="bg-indigo-900 hover:bg-indigo-800 text-white text-[11px] px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                        id="document-invoice-print-btn"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>طباعة الفاتورة / Print Document</span>
+                      </button>
+                    </div>
+
+                    <div id="document-invoice-printable-area" className="border border-slate-200 rounded-xl p-6 bg-slate-50/20 flex flex-col gap-5 text-slate-800 text-xs">
+                      {/* Invoice Corporate Header */}
+                      <div className="flex justify-between items-start border-b-2 border-slate-800 pb-4">
+                        <div>
+                          <h2 className="text-lg font-extrabold text-slate-950 font-sans">
+                            الدولية ستيل لتجارة حديد التسليح
+                          </h2>
+                          <p className="text-[10px] text-slate-500 font-medium mt-0.5">المركز الرئيسي والمخازن: مدينة السادات، المنوفية</p>
+                          <p className="text-[10px] text-slate-500 font-medium">الهاتف: 01002345678 | سجل تجاري: 987654</p>
+                        </div>
+                        <div className="text-left font-mono">
+                          <span className="bg-slate-900 text-white px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-wider">
+                            {isSales ? "فاتورة مبيعات ضريبية" : "فاتورة مشتريات ضريبية"}
+                          </span>
+                          <p className="text-[11px] font-bold text-slate-900 mt-2">رقم المستند: {String(invoiceNo)}</p>
+                          <p className="text-[10px] text-slate-500">التاريخ: {String(viewingRowData.InvoiceDate || viewingRowData.PurchaseDate || viewingRowData.Date || "غير محدد")}</p>
+                        </div>
+                      </div>
+
+                      {/* Partner Details */}
+                      <div className="grid grid-cols-2 gap-4 bg-slate-100/50 p-4 rounded-lg border border-slate-200">
+                        <div>
+                          <p className="font-bold text-slate-500 mb-1">{isSales ? "العميل الموجه إليه / Customer:" : "المورد / Supplier:"}</p>
+                          <p className="text-sm font-black text-slate-900">{partnerName}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">رمز الجهة: {String(partnerVal || "N/A")}</p>
+                        </div>
+                        <div className="text-left">
+                          <p className="font-bold text-slate-500 mb-1">تفاصيل الدفع والمستودع:</p>
+                          <p className="text-[11px] font-semibold text-slate-800">حالة الدفع: <span className="font-sans">{String(viewingRowData.PaymentStatus || "مؤجل")}</span></p>
+                          <p className="text-[11px] font-semibold text-slate-800">المخزن / الفرع: <span className="font-sans">{String(viewingRowData.WarehouseCode || viewingRowData.BranchCode || "المخزن الرئيسي")}</span></p>
+                        </div>
+                      </div>
+
+                      {/* Line items table */}
+                      <div>
+                        <table className="w-full text-right border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-slate-900 text-white font-bold border border-slate-900">
+                              <th className="p-2 border border-slate-300 text-center">م</th>
+                              <th className="p-2 border border-slate-300">كود الصنف / Item Code</th>
+                              <th className="p-2 border border-slate-300 text-center">الكمية / Qty</th>
+                              <th className="p-2 border border-slate-300 text-left">سعر الوحدة / Price</th>
+                              <th className="p-2 border border-slate-300 text-left">الإجمالي / Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {matchingLines.length > 0 ? (
+                              matchingLines.map((line: any, lIdx: number) => {
+                                const qty = parseFloat(line.Quantity) || 0;
+                                const unitPrice = parseFloat(line.UnitPrice) || 0;
+                                const lineTotal = qty * unitPrice;
+                                return (
+                                  <tr key={lIdx} className="border border-slate-300 hover:bg-slate-100/40">
+                                    <td className="p-2 border border-slate-300 text-center font-mono">{lIdx + 1}</td>
+                                    <td className="p-2 border border-slate-300">
+                                      <span className="font-mono font-bold text-slate-900">{String(line.ItemCode || "")}</span>
+                                      {line.ItemName && <span className="text-[10px] text-slate-500 block">{line.ItemName}</span>}
+                                    </td>
+                                    <td className="p-2 border border-slate-300 text-center font-mono font-black">{qty.toLocaleString()}</td>
+                                    <td className="p-2 border border-slate-300 text-left font-mono">{unitPrice.toLocaleString()} EGP</td>
+                                    <td className="p-2 border border-slate-300 text-left font-mono font-bold text-slate-900">{lineTotal.toLocaleString()} EGP</td>
+                                  </tr>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan={5} className="p-4 text-center text-slate-400 italic">لا توجد بنود مسجلة لهذا المستند في تفاصيل الأسطر.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Totals box */}
+                      <div className="flex justify-end">
+                        <div className="w-full sm:w-1/2 bg-slate-100 p-4 rounded-xl border border-slate-200 flex flex-col gap-1.5 font-mono">
+                          <div className="flex justify-between items-center text-[11px] text-slate-600">
+                            <span className="font-sans">الإجمالي الفرعي / Net Subtotal:</span>
+                            <span>{Number(viewingRowData.NetTotal || viewingRowData.GrossTotal || 0).toLocaleString()} EGP</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[11px] text-slate-600">
+                            <span className="font-sans">قيمة الضريبة (14% VAT):</span>
+                            <span>{Number(viewingRowData.VATAmount || 0).toLocaleString()} EGP</span>
+                          </div>
+                          <div className="border-t border-slate-300 my-1"></div>
+                          <div className="flex justify-between items-center text-xs font-black text-slate-900">
+                            <span className="font-sans">الإجمالي الكلي / Grand Total:</span>
+                            <span className="text-indigo-800 text-sm font-bold">{Number(viewingRowData.GrandTotal || viewingRowData.GrossTotal || 0).toLocaleString()} EGP</span>
+                          </div>
+                          {viewingRowData.PaidAmount !== undefined && (
+                            <div className="flex justify-between items-center text-[11px] text-slate-600 mt-1">
+                              <span className="font-sans">المبلغ المدفوع / Paid Amount:</span>
+                              <span className="text-emerald-700">{Number(viewingRowData.PaidAmount || 0).toLocaleString()} EGP</span>
+                            </div>
+                          )}
+                          {viewingRowData.RemainingAmount !== undefined && (
+                            <div className="flex justify-between items-center text-[11px] text-slate-600">
+                              <span className="font-sans">المتبقي / Outstanding:</span>
+                              <span className="text-rose-700 font-bold">{Number(viewingRowData.RemainingAmount || 0).toLocaleString()} EGP</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })() : (
+                /* Regular record layout */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="view-regular-record-pane">
+                  {activeSheet.columns.map((col) => {
+                    const val = viewingRowData[col.key];
+                    return (
+                      <div key={col.key} className="bg-slate-50 border border-slate-150 rounded-xl p-4 flex flex-col gap-1 text-right">
+                        <span className="text-xs text-slate-400 font-bold font-sans flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                          {col.label} <span className="text-[10px] font-mono text-slate-300">[{col.key}]</span>
+                        </span>
+                        <span className="text-sm font-black text-slate-800 font-mono mt-1 break-all">
+                          {col.type === "currency" ? (
+                            <span className="text-emerald-700 font-bold">{Number(val || 0).toLocaleString()} EGP</span>
+                          ) : col.type === "boolean" ? (
+                            val ? (
+                              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-black">نعم (TRUE)</span>
+                            ) : (
+                              <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full font-black">لا (FALSE)</span>
+                            )
+                          ) : (
+                            String(val ?? "N/A")
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-150 flex justify-between items-center text-[10px] text-slate-500 font-mono" id="view-row-footer">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                معاينة مباشرة آمنة لقاعدة البيانات / Active Record Preview Mode
+              </span>
+              <span>
+                الدولية ستيل - نظام الإدارة الموحد
+              </span>
             </div>
           </div>
         </div>
@@ -6448,39 +8945,19 @@ export default function App() {
           <div className="hidden md:block h-5 w-px bg-slate-800" />
 
           <div className="flex flex-wrap items-center justify-center gap-3" id="selection-actions">
-            {/* Bulk Status Update */}
+            {/* Bulk Status Update Drawer Trigger */}
             {statusColumn && (
-              <div className="flex flex-wrap items-center justify-center gap-2" id="bulk-status-container">
-                <span className="text-[10px] text-slate-400 font-medium font-sans">Update Status / تغيير الحالة:</span>
-                <div className="flex flex-wrap gap-1" id="bulk-status-pills">
-                  {/* We offer a simple set of status values dynamically from the sheet's existing status fields */}
-                  {Array.from(new Set(activeSheet.rows.map(r => r[statusColumn.key]).filter(Boolean)))
-                    .slice(0, 4) // Show up to 4 existing statuses
-                    .map((status: any) => (
-                      <button
-                        key={status}
-                        onClick={() => handleBulkStatusUpdate(status)}
-                        className="bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white px-2.5 py-1 rounded-full text-[10px] font-semibold cursor-pointer border border-slate-800 transition-all shadow-sm"
-                        id={`bulk-status-btn-${status}`}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                  {/* Fallback statuses if no existing status found */}
-                  {Array.from(new Set(activeSheet.rows.map(r => r[statusColumn.key]).filter(Boolean))).length === 0 && (
-                    ["Pending", "Completed", "Cancelled"].map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => handleBulkStatusUpdate(status)}
-                        className="bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white px-2.5 py-1 rounded-full text-[10px] font-semibold cursor-pointer border border-slate-800 transition-all shadow-sm"
-                        id={`bulk-status-btn-${status}`}
-                      >
-                        {status}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
+              <button
+                onClick={() => {
+                  setSelectedBulkStatus("");
+                  setIsBulkUpdateDrawerOpen(true);
+                }}
+                className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white px-4 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all border border-indigo-700 shadow-sm"
+                id="bulk-update-drawer-trigger"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Bulk Update Status / تحديث الحالة جماعياً</span>
+              </button>
             )}
 
             {/* Bulk Delete */}
